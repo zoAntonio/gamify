@@ -1,20 +1,18 @@
-package com.gamify.user;
+package com.gamify.domain.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class User extends BaseEntity {
 
     @Column(unique = true, nullable = false)
     private String username;
@@ -38,7 +36,4 @@ public class User {
     private int xpTotal = 0;
     private int niveau = 1;
     private String titre = "Novice";
-
-    @Column(updatable = false)
-    private LocalDateTime createdAt = LocalDateTime.now();
 }

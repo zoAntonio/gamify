@@ -12,6 +12,15 @@ Charge totale estimée (référence, pas contraignante en solo) : 19 jours-homme
 - **Phase 1** — MVP jouable (attributs, tâches/kanban, agenda/habitudes, avatar/animations)
 - **Phase 2** — Fonctionnalités avancées (badges, photos preuve, multi-utilisateurs, recette)
 
+## Dette technique connue
+
+- **Filtre JWT manquant** : `SecurityConfig` protège tout endpoint hors
+  `/api/auth/**`, mais aucun filtre (`OncePerRequestFilter`) ne lit le header
+  `Authorization` pour peupler le `SecurityContext` à partir du token émis par
+  `JwtService`. Résultat actuel : tout endpoint protégé renverrait 401 même avec un
+  token valide. À corriger avant d'écrire le premier endpoint authentifié réel
+  (ex. `ActivityController`) — probablement en même temps que G1-T07.
+
 ## Ordre fonctionnel conseillé (dépendances)
 
 1. **G0-T01 à G0-T03** — socle, auth, profil, navigation. Aucune dépendance externe.

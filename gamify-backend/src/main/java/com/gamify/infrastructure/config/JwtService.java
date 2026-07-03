@@ -1,4 +1,4 @@
-package com.gamify.config;
+package com.gamify.infrastructure.config;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

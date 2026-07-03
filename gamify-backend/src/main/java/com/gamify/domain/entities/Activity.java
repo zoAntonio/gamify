@@ -1,8 +1,15 @@
-package com.gamify.activity;
+package com.gamify.domain.entities;
 
-import com.gamify.user.User;
-import jakarta.persistence.*;
+import com.gamify.domain.enums.StatutKanban;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
@@ -10,12 +17,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "activities")
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
-public class Activity {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class Activity extends BaseEntity {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
@@ -34,10 +38,5 @@ public class Activity {
 
     private boolean confirme = false; // irréversible après confirmation
 
-    private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime completedAt;
-
-    public enum StatutKanban {
-        A_FAIRE, EN_COURS, TERMINE
-    }
 }

@@ -1,4 +1,4 @@
-package com.gamify.config;
+package com.gamify.infrastructure.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

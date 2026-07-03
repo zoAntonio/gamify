@@ -1,5 +1,6 @@
-package com.gamify.user;
+package com.gamify.infrastructure.persistence;
 
+import com.gamify.domain.entities.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
