@@ -12,6 +12,15 @@ Charge totale estimée (référence, pas contraignante en solo) : 19 jours-homme
 - **Phase 1** — MVP jouable (attributs, tâches/kanban, agenda/habitudes, avatar/animations)
 - **Phase 2** — Fonctionnalités avancées (badges, photos preuve, multi-utilisateurs, recette)
 
+## Suivi d'avancement
+
+Tenu à jour via [feature-checklist.md](feature-checklist.md) (étape 6) une fois
+qu'un ticket passe la checklist de validation — pas avant.
+
+| Ticket | Statut | Date | Notes |
+|---|---|---|---|
+| — | — | — | Aucun ticket fonctionnel validé pour l'instant. Le nettoyage/socle backend (BaseEntity, exceptions, ApiResponse, GlobalExceptionHandler) a été fait en dehors de la numérotation de tickets — voir historique de conversation / commits pour le détail. |
+
 ## Dette technique connue
 
 - **Filtre JWT manquant** : `SecurityConfig` protège tout endpoint hors

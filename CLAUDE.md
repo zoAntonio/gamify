@@ -48,6 +48,21 @@ revue) sont dans deux documents de référence issus de `docs/` :
 - Frontend React/TypeScript → [.claude/conventions/frontend-react-typescript.md](.claude/conventions/frontend-react-typescript.md)
 
 Lis le fichier concerné avant d'écrire du code dans la couche correspondante.
+
+Il y a en plus, pour chaque côté, un guide de **méthode** (l'ordre des étapes pour
+ajouter une fonctionnalité) — à lire avant de commencer toute nouvelle
+fonctionnalité, en complément des règles de style ci-dessus :
+
+- Backend → [.claude/context/backend-workflow.md](.claude/context/backend-workflow.md)
+  (s'appuie sur le socle déjà en place : `BaseEntity`, exceptions, `ApiResponse`...).
+- Frontend → [.claude/context/frontend-workflow.md](.claude/context/frontend-workflow.md)
+  (le frontend est encore un squelette Vite par défaut, rien n'y est encore installé).
+
+**Avant de dire qu'une fonctionnalité est terminée**, passer par
+[.claude/context/feature-checklist.md](.claude/context/feature-checklist.md) — le
+portail de sortie qui vérifie les conventions (P0/P1) et met à jour
+`.claude/context/roadmap.md` (section "Suivi d'avancement"). Ne pas sauter cette
+étape même pour un changement qui semble petit.
 Points non négociables (grille de revue P0, cf. documents) :
 - Clean Architecture respectée (pas de repository/EntityManager dans un controller).
 - Pas de `System.out.println` / `console.log` oublié → SLF4J / rien.
@@ -57,20 +72,24 @@ Points non négociables (grille de revue P0, cf. documents) :
 
 ## État actuel du code (à connaître avant de modifier)
 
-Le repo est un **socle initial**, pas encore aligné sur la Clean Architecture cible :
-- Le backend a des packages par feature (`com.gamify.user`, `com.gamify.activity`,
-  `com.gamify.auth`, `com.gamify.progression`, `com.gamify.config`) mais pas encore la
-  séparation `domain/application/infrastructure/presentation` du document de
-  convention. Pas de DTOs, pas de mappers, entités avec `@Data` Lombok exposées
-  directement (`AuthController`, `AuthService`).
-- Le frontend est le squelette Vite par défaut (pas encore de structure
-  `features/`, pas de Zustand/TanStack Query/Tailwind installés).
+- Le backend suit désormais la structure en couches cible
+  (`domain/application/infrastructure/presentation`, voir
+  [.claude/context/backend-workflow.md](.claude/context/backend-workflow.md) pour
+  la recette détaillée d'ajout de fonctionnalité). Le socle est en place :
+  `BaseEntity`, hiérarchie d'exceptions domain, `ApiResponse<T>`,
+  `GlobalExceptionHandler`, `JpaConfig`. Le flux `auth` (register/login) est le
+  premier exemple bout-en-bout à suivre comme patron pour les prochaines
+  fonctionnalités (Activités/Kanban, Progression, Badges...).
+- **Dette technique connue** : pas de filtre JWT peuplant le `SecurityContext` —
+  voir [.claude/context/roadmap.md](.claude/context/roadmap.md) section "Dette
+  technique connue". À résoudre avant le premier endpoint réellement protégé.
+- Le frontend est encore le squelette Vite par défaut (pas de structure
+  `features/`, pas de Zustand/TanStack Query/Tailwind installés) — pas encore
+  touché par ce nettoyage, qui s'est concentré sur le backend.
 - Aucun test n'existe encore (ni JUnit côté backend, ni Vitest côté frontend).
 
-Ne pas bloquer sur cet écart : les nouvelles fonctionnalités doivent suivre les
-conventions cible dès maintenant (nouveaux packages/dossiers propres), sans qu'un
-refactor global soit exigé sauf demande explicite. Signaler si un ticket touche du
-code existant non conforme, pour décider au cas par cas de le remettre aux normes.
+Signaler si un ticket touche du code existant non conforme, pour décider au cas
+par cas de le remettre aux normes.
 
 ## Rappels de collaboration
 
