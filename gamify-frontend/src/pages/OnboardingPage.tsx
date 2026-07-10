@@ -5,6 +5,7 @@ import { useDomaines } from '@/features/profile/hooks/useDomaines';
 import { profileService } from '@/features/profile/services/profileService';
 import { AvatarPicker } from '@/features/profile/components/AvatarPicker';
 import { DomainSelector } from '@/features/profile/components/DomainSelector';
+import { Button } from '@/components/ui/Button';
 import type { Attribut, Avatar } from '@/features/profile/types/profile.types';
 
 export const OnboardingPage: FC = () => {
@@ -54,29 +55,38 @@ export const OnboardingPage: FC = () => {
     }
   };
 
-  if (isLoading) return <p>Chargement des domaines...</p>;
+  if (isLoading) return <p className="text-sm text-text-muted">Chargement des domaines...</p>;
 
   return (
-    <section className="onboarding-page">
-      <h1>Crée ton profil</h1>
+    <section className="flex max-w-2xl flex-col gap-8">
+      <div>
+        <h1 className="text-3xl font-bold">Crée ton profil</h1>
+        <p className="mt-1 text-sm text-text-muted">
+          Choisis ton avatar et les domaines que tu veux suivre.
+        </p>
+      </div>
 
-      <h2>Choisis ton avatar</h2>
-      <AvatarPicker value={avatar} onChange={setAvatar} />
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Choisis ton avatar</h2>
+        <AvatarPicker value={avatar} onChange={setAvatar} />
+      </div>
 
-      <h2>Choisis les domaines à suivre</h2>
-      <DomainSelector
-        domaines={domaines}
-        selectedIds={selectedIds}
-        onToggle={toggleDomaine}
-        onCreateDomaine={handleCreateDomaine}
-        isCreating={isCreating}
-      />
+      <div className="flex flex-col gap-3">
+        <h2 className="text-lg font-semibold">Choisis les domaines à suivre</h2>
+        <DomainSelector
+          domaines={domaines}
+          selectedIds={selectedIds}
+          onToggle={toggleDomaine}
+          onCreateDomaine={handleCreateDomaine}
+          isCreating={isCreating}
+        />
+      </div>
 
-      {error && <p className="onboarding-error">{error}</p>}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
-      <button type="button" onClick={handleSave} disabled={isSaving}>
+      <Button type="button" onClick={handleSave} disabled={isSaving}>
         {isSaving ? 'Enregistrement...' : 'Valider mon profil'}
-      </button>
+      </Button>
     </section>
   );
 };

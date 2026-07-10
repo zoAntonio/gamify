@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { FC, FormEvent } from 'react';
+import { TextField } from '@/components/ui/TextField';
+import { Button } from '@/components/ui/Button';
 import type { LoginRequest } from '@/features/auth/types/auth.types';
 
 interface LoginFormProps {
@@ -17,28 +19,29 @@ export const LoginForm: FC<LoginFormProps> = ({ onSubmit, isLoading }) => {
   };
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit}>
-      <label htmlFor="login-email">Email</label>
-      <input
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <TextField
         id="login-email"
+        label="Email"
         type="email"
+        placeholder="ton-email@exemple.com"
         required
         value={email}
         onChange={(event) => setEmail(event.target.value)}
       />
 
-      <label htmlFor="login-password">Mot de passe</label>
-      <input
+      <TextField
         id="login-password"
+        label="Mot de passe"
         type="password"
         required
         value={password}
         onChange={(event) => setPassword(event.target.value)}
       />
 
-      <button type="submit" disabled={isLoading}>
+      <Button type="submit" fullWidth disabled={isLoading}>
         {isLoading ? 'Connexion...' : 'Se connecter'}
-      </button>
+      </Button>
     </form>
   );
 };

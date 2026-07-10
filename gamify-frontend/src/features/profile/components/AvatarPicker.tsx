@@ -15,21 +15,29 @@ const AVATAR_OPTIONS: { value: Avatar; emoji: string; label: string }[] = [
 
 export const AvatarPicker: FC<AvatarPickerProps> = ({ value, onChange }) => {
   return (
-    <div className="avatar-picker">
-      {AVATAR_OPTIONS.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          className={option.value === value ? 'avatar-option selected' : 'avatar-option'}
-          onClick={() => onChange(option.value)}
-          aria-pressed={option.value === value}
-        >
-          <span className="avatar-emoji" role="img" aria-label={option.label}>
-            {option.emoji}
-          </span>
-          <span>{option.label}</span>
-        </button>
-      ))}
+    <div className="flex flex-wrap gap-3">
+      {AVATAR_OPTIONS.map((option) => {
+        const isSelected = option.value === value;
+        return (
+          <button
+            key={option.value}
+            type="button"
+            onClick={() => onChange(option.value)}
+            aria-pressed={isSelected}
+            className={[
+              'flex flex-col items-center gap-1 rounded-control border px-4 py-3 text-sm transition-colors',
+              isSelected
+                ? 'border-accent bg-accent-soft text-text'
+                : 'border-border bg-surface-2 text-text-muted hover:border-accent/40 hover:text-text',
+            ].join(' ')}
+          >
+            <span className="text-2xl" role="img" aria-label={option.label}>
+              {option.emoji}
+            </span>
+            <span>{option.label}</span>
+          </button>
+        );
+      })}
     </div>
   );
 };

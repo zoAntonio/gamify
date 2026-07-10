@@ -2,6 +2,7 @@ import type { FC } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from '@/router/ProtectedRoute';
 import { RootRedirect } from '@/router/RootRedirect';
+import { AppLayout } from '@/components/shared/AppLayout';
 import { AuthPage } from '@/pages/auth/AuthPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { DashboardPlaceholderPage } from '@/pages/dashboard/DashboardPlaceholderPage';
@@ -17,8 +18,10 @@ export const AppRouter: FC = () => {
         <Route path="/login" element={<AuthPage />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/onboarding" element={<OnboardingPage />} />
-          <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
+          <Route element={<AppLayout />}>
+            <Route path="/onboarding" element={<OnboardingPage />} />
+            <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
+          </Route>
         </Route>
 
         <Route path="/401" element={<UnauthorizedPage />} />

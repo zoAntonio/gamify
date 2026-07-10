@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { FC, FormEvent } from 'react';
+import { TextField } from '@/components/ui/TextField';
+import { Button } from '@/components/ui/Button';
 import type { RegisterRequest } from '@/features/auth/types/auth.types';
 
 interface RegisterFormProps {
@@ -18,28 +20,29 @@ export const RegisterForm: FC<RegisterFormProps> = ({ onSubmit, isLoading }) => 
   };
 
   return (
-    <form className="auth-form" onSubmit={handleSubmit}>
-      <label htmlFor="register-username">Pseudo</label>
-      <input
+    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+      <TextField
         id="register-username"
+        label="Pseudo"
         type="text"
         required
         value={username}
         onChange={(event) => setUsername(event.target.value)}
       />
 
-      <label htmlFor="register-email">Email</label>
-      <input
+      <TextField
         id="register-email"
+        label="Email"
         type="email"
+        placeholder="ton-email@exemple.com"
         required
         value={email}
         onChange={(event) => setEmail(event.target.value)}
       />
 
-      <label htmlFor="register-password">Mot de passe</label>
-      <input
+      <TextField
         id="register-password"
+        label="Mot de passe"
         type="password"
         required
         minLength={6}
@@ -47,9 +50,9 @@ export const RegisterForm: FC<RegisterFormProps> = ({ onSubmit, isLoading }) => 
         onChange={(event) => setPassword(event.target.value)}
       />
 
-      <button type="submit" disabled={isLoading}>
+      <Button type="submit" fullWidth disabled={isLoading}>
         {isLoading ? 'Création...' : 'Créer mon compte'}
-      </button>
+      </Button>
     </form>
   );
 };
