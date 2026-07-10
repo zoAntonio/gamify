@@ -2,9 +2,9 @@ import type { FC } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { ProtectedRoute } from '@/router/ProtectedRoute';
 import { RootRedirect } from '@/router/RootRedirect';
-import { AuthPage } from '@/pages/AuthPage';
+import { AuthPage } from '@/pages/auth/AuthPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
-import { DashboardPlaceholderPage } from '@/pages/DashboardPlaceholderPage';
+import { DashboardPlaceholderPage } from '@/pages/dashboard/DashboardPlaceholderPage';
 
 export const AppRouter: FC = () => {
   return (
