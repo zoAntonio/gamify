@@ -14,6 +14,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Tableau de bord' },
+  { to: '/activities', label: 'Tâches' },
   { to: '/onboarding', label: 'Profil' },
 ];
 

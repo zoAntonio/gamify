@@ -1,5 +1,6 @@
 package com.gamify.domain.entities;
 
+import com.gamify.domain.enums.Attribut;
 import com.gamify.domain.enums.Avatar;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,17 +44,37 @@ public class User extends BaseEntity {
     )
     private Set<Domaine> domainesTrackes = new HashSet<>();
 
-    // Attributs RPG
-    private int intelligence = 0;
-    private int force = 0;
-    private int vitesse = 0;
-    private int vitalite = 0;
-    private int charisme = 0;
-    private int resistance = 0;
-    private int precision = 0;
+    // Attributs RPG (alignés sur l'enum Attribut : INT/FOR/VIT/PRE/CHA/RES),
+    // départ à 10 (domain.md) — VIT = Vitalité (décision projet).
+    private int intelligence = 10;
+    private int force = 10;
+    private int vitalite = 10;
+    private int precision = 10;
+    private int charisme = 10;
+    private int resistance = 10;
 
     // Progression
     private int xpTotal = 0;
     private int niveau = 1;
     private String titre = "Novice";
+
+    /**
+     * Gain +1 à la validation d'une activité (domain.md). Version minimale :
+     * pas encore de malus/plancher/historisation ni de recalcul de niveau —
+     * réservé à G1-T04/G1-T05, volontairement non traité ici.
+     */
+    public void appliquerGainAttribut(Attribut attribut) {
+        switch (attribut) {
+            case INT -> intelligence++;
+            case FOR -> force++;
+            case VIT -> vitalite++;
+            case PRE -> precision++;
+            case CHA -> charisme++;
+            case RES -> resistance++;
+        }
+    }
+
+    public void ajouterXp(int xp) {
+        xpTotal += xp;
+    }
 }

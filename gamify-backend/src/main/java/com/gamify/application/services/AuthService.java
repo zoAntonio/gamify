@@ -9,9 +9,11 @@ import com.gamify.domain.exceptions.UnauthorizedException;
 import com.gamify.infrastructure.config.JwtService;
 import com.gamify.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -34,6 +36,7 @@ public class AuthService {
         user.setPassword(passwordEncoder.encode(request.password()));
         userRepository.save(user);
 
+        log.info("Nouveau compte créé : {}", user.getUsername());
         String token = jwtService.generateToken(user.getEmail());
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getNiveau(), user.getXpTotal());
     }
@@ -45,6 +48,7 @@ public class AuthService {
                 .filter(u -> passwordEncoder.matches(request.password(), u.getPassword()))
                 .orElseThrow(() -> new UnauthorizedException("Email ou mot de passe incorrect"));
 
+        log.info("Connexion réussie : {}", user.getUsername());
         String token = jwtService.generateToken(user.getEmail());
         return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getNiveau(), user.getXpTotal());
     }

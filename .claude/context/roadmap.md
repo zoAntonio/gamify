@@ -21,7 +21,9 @@ qu'un ticket passe la checklist de validation — pas avant.
 |---|---|---|---|
 | G0-T01 | ✅ Fait | 2026-07-03 | Inscription/connexion (déjà en place depuis le socle) + bouton "Essayer en démo" (register puis fallback login sur 409, pas de compte seedé en base). |
 | G0-T02 | ✅ Fait | 2026-07-03 | Avatar (enum + emoji placeholder) + domaines trackés. Domaines rendus **personnalisables** (écart assumé vs "liste prédéfinie" du ticket original — décision utilisateur) : 5 domaines système seedés en migration + création de domaines perso par l'utilisateur. |
-| G0-T03 | ⏳ Pas commencé | — | Navigation principale + vrai tableau de bord. Un `DashboardPlaceholderPage` minimal existe en attendant (redirection post-onboarding). |
+| G0-T03 | 🔶 Partiel | 2026-07-10 | Navigation principale faite (`Sidebar`/`AppLayout`, responsive). Vrai tableau de bord (niveau, XP, attributs, résumé du jour, streak, dernier badge) toujours pas fait — `DashboardPlaceholderPage` minimal en attendant. |
+| G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
+| G1-T09 | 🔶 Partiel | 2026-07-10 | Vue liste des tâches faite (page `/activities`, création + validation). Backend supporte filtres domaine/attribut/statut + tri via `ActivityRepository.search` mais **pas encore d'UI de filtres/tri** côté frontend. Pas de calcul de ratio réalisé/objectif (`objectif` reste un champ descriptif libre, pas de suivi numérique). |
 
 **Écarts/dette introduits par G0-T01/G0-T02, notés consciemment plutôt que masqués :**
 - `GET /api/domaines` retourne une `List<DomaineResponse>` non paginée — accepté
@@ -39,12 +41,30 @@ qu'un ticket passe la checklist de validation — pas avant.
   l'utilisateur via `scripts/dev.ps1` avant de considérer le parcours
   garanti à 100%.
 
+**Écarts/dette introduits par G1-T07/G1-T09 (2026-07-10) :**
+- Gain d'attribut minimal (`User.appliquerGainAttribut`) : uniquement +1 à la
+  validation, pas de malus −2/−3(PRE), pas de plancher explicite (inutile tant
+  qu'il n'y a pas de malus), pas d'écriture dans `ProgressionLog` (existe déjà
+  en base mais pas encore branché), pas de recalcul de niveau/titre à partir de
+  `xpTotal`. Le tout est le périmètre de G1-T04/G1-T05, volontairement pas
+  traité maintenant (décision utilisateur).
+- Pas d'UI de filtres/tri sur `/activities` côté frontend (le backend les
+  supporte déjà via `ActivityRepository.search` + query params).
+- Aucun test écrit (`ActivityService` côté backend, `useActivities` côté
+  frontend) — même dette assumée que G0-T01/G0-T02.
+- Vérifié en revanche via appels HTTP réels (curl) sur le compte démo : create
+  ×6, valider ×3 (+ re-validation refusée), liste paginée cohérente,
+  `xpTotal` incrémenté (150 après 3×50) — pas seulement `tsc`/compile.
+
 ## Dette technique connue
 
 - ~~Filtre JWT manquant~~ — **résolu** avec G0-T02 (`JwtAuthFilter` +
   `UserDetailsServiceImpl` + `JsonAuthenticationEntryPoint` pour un vrai 401 JSON
   au lieu du 403 par défaut de Spring Security). Vérifié : `GET /api/profile`
   sans token → 401 ; avec token valide → 200.
+- ~~CORS en wildcard sur AuthController uniquement~~ — **résolu** (2026-07-10) :
+  CORS centralisé dans `SecurityConfig` sur `/api/**`, restreint à l'origine du
+  frontend (`gamify.cors.allowed-origin`), wildcard retiré.
 
 ## Ordre fonctionnel conseillé (dépendances)
 

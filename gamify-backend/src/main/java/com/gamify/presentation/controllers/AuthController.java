@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*")
 public class AuthController {
 
     private final AuthService authService;
@@ -30,7 +29,7 @@ public class AuthController {
     }
 
     @GetMapping("/ping")
-    public String ping() {
-        return "Gamify Backend OK";
+    public ApiResponse<String> ping() {
+        return ApiResponse.success("Gamify Backend OK", "Pong");
     }
 }

@@ -1,6 +1,8 @@
-export type Avatar = 'GUERRIER' | 'MAGE' | 'ARCHER' | 'VOLEUR';
+import type { Attribut } from '@/types/attribut.types';
 
-export type Attribut = 'INT' | 'FOR' | 'VIT' | 'PRE' | 'CHA' | 'RES';
+export type { Attribut };
+
+export type Avatar = 'GUERRIER' | 'MAGE' | 'ARCHER' | 'VOLEUR';
 
 export interface Domaine {
   id: number;
