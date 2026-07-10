@@ -24,6 +24,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const body = (await response.json().catch(() => null)) as ApiResponse<T> | null;
 
   if (!response.ok || !body || !body.success) {
+    if (response.status === 401) {
+      useAuthStore.getState().logout();
+      window.location.href = '/401';
+    } else if (response.status === 403) {
+      window.location.href = '/403';
+    }
     throw new Error(body?.message ?? `Erreur ${response.status}`);
   }
 
