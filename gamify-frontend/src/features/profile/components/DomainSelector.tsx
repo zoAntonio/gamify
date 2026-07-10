@@ -49,18 +49,13 @@ export const DomainSelector: FC<DomainSelectorProps> = ({
             selected={selectedIds.includes(domaine.id)}
             onClick={() => onToggle(domaine.id)}
           >
-            <span className="flex-1">
-              {domaine.nom} <span className="text-text-muted">({domaine.attributs.join(', ')})</span>
-              {!domaine.systeme && <span className="ml-2 text-xs text-text-muted">— perso</span>}
-            </span>
+            {domaine.nom} <span className="text-text-muted">({domaine.attributs.join(', ')})</span>
+            {!domaine.systeme && <span className="ml-2 text-[13px] text-text-muted">— perso</span>}
           </ListItem>
         ))}
       </List>
 
-      <form
-        className="flex flex-col gap-3 rounded-card border border-border bg-surface p-4"
-        onSubmit={handleCreate}
-      >
+      <form className="flex flex-col gap-3 rounded-card bg-surface p-4" onSubmit={handleCreate}>
         <TextField
           id="domaine-nom"
           label="Nouveau domaine"
@@ -79,10 +74,8 @@ export const DomainSelector: FC<DomainSelectorProps> = ({
                 onClick={() => toggleAttribut(attribut)}
                 aria-pressed={isSelected}
                 className={[
-                  'rounded-control border px-3 py-1.5 text-xs font-medium transition-colors',
-                  isSelected
-                    ? 'border-accent bg-accent-soft text-accent'
-                    : 'border-border bg-surface-2 text-text-muted hover:text-text',
+                  'rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
+                  isSelected ? 'bg-accent text-white' : 'bg-surface-2 text-text-muted',
                 ].join(' ')}
               >
                 {attribut}

@@ -1,34 +1,35 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-bg: #0a0e1f;
-  --color-surface: #12172d;
-  --color-surface-2: #1a2140;
-  --color-border: #262c4d;
-  --color-text: #f4f6fb;
-  --color-text-muted: #8b93b8;
-  --color-accent: #4f6df5;
-  --color-accent-hover: #6683ff;
-  --color-accent-soft: rgba(79, 109, 245, 0.15);
-  --color-danger: #ef4444;
-  --color-success: #22c55e;
+  --color-bg: #f2f2f7;
+  --color-surface: #ffffff;
+  --color-surface-2: #e9e9eb;
+  --color-border: #d1d1d6;
+  --color-text: #1c1c1e;
+  --color-text-muted: #8e8e93;
+  --color-accent: #007aff;
+  --color-accent-hover: #0066d6;
+  --color-accent-soft: rgba(0, 122, 255, 0.12);
+  --color-danger: #ff3b30;
+  --color-success: #34c759;
 
   /* Couleurs des attributs RPG (Phase 1) — un seul endroit à changer pour un reskin */
-  --color-int: #4f6df5;
-  --color-for: #ef4444;
-  --color-vit: #22c55e;
-  --color-pre: #eab308;
-  --color-cha: #ec4899;
-  --color-res: #06b6d4;
+  --color-int: #007aff;
+  --color-for: #ff3b30;
+  --color-vit: #34c759;
+  --color-pre: #ffcc00;
+  --color-cha: #ff2d55;
+  --color-res: #30b0c7;
 
-  --radius-card: 1.5rem;
-  --radius-control: 0.875rem;
+  --radius-card: 1rem;
+  --radius-control: 0.75rem;
 
-  --font-sans: 'Segoe UI', system-ui, Roboto, sans-serif;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {

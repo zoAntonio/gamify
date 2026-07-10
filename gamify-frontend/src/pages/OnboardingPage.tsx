@@ -60,19 +60,19 @@ export const OnboardingPage: FC = () => {
   return (
     <section className="flex max-w-2xl flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold">Crée ton profil</h1>
-        <p className="mt-1 text-sm text-text-muted">
+        <h1 className="text-[28px] font-semibold tracking-tight">Crée ton profil</h1>
+        <p className="mt-1 text-[15px] text-text-muted">
           Choisis ton avatar et les domaines que tu veux suivre.
         </p>
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Choisis ton avatar</h2>
+        <h2 className="text-[17px] font-semibold">Choisis ton avatar</h2>
         <AvatarPicker value={avatar} onChange={setAvatar} />
       </div>
 
       <div className="flex flex-col gap-3">
-        <h2 className="text-lg font-semibold">Choisis les domaines à suivre</h2>
+        <h2 className="text-[17px] font-semibold">Choisis les domaines à suivre</h2>
         <DomainSelector
           domaines={domaines}
           selectedIds={selectedIds}

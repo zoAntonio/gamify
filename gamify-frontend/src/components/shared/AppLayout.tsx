@@ -11,12 +11,12 @@ export const AppLayout: FC = () => {
       <Sidebar isOpen={isMobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-border px-4 py-3 md:hidden">
-          <span className="text-lg font-semibold">Gamify</span>
+        <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
+          <span className="text-[17px] font-semibold">Gamify</span>
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
-            className="rounded-control border border-border p-2 text-text-muted"
+            className="rounded-control p-2 text-text-muted active:bg-surface-2"
             aria-label="Ouvrir le menu"
           >
             ☰

@@ -10,15 +10,15 @@ export const TextField: FC<TextFieldProps> = ({ label, error, id, className = ''
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-text-muted">
+      <label htmlFor={id} className="text-[13px] font-medium text-text-muted">
         {label}
       </label>
       <input
         id={id}
         className={[
-          'rounded-control border bg-surface-2 px-4 py-3 text-sm text-text placeholder:text-text-muted/60',
-          'outline-none transition-colors focus:border-accent',
-          error ? 'border-danger' : 'border-border',
+          'rounded-control bg-surface-2 px-4 py-3 text-[15px] text-text placeholder:text-text-muted',
+          'outline-none transition-shadow focus:ring-2 focus:ring-accent/40',
+          error ? 'ring-2 ring-danger/50' : '',
           className,
         ]
           .filter(Boolean)

@@ -6,5 +6,11 @@ interface ListProps {
 }
 
 export const List: FC<ListProps> = ({ children, className = '' }) => (
-  <ul className={['flex flex-col gap-2', className].filter(Boolean).join(' ')}>{children}</ul>
+  <ul
+    className={['divide-y divide-border overflow-hidden rounded-card bg-surface', className]
+      .filter(Boolean)
+      .join(' ')}
+  >
+    {children}
+  </ul>
 );

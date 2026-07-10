@@ -23,8 +23,8 @@ export const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
 
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
     [
-      'rounded-control px-3 py-2 text-sm font-medium transition-colors',
-      isActive ? 'bg-accent-soft text-accent' : 'text-text-muted hover:bg-surface-2 hover:text-text',
+      'rounded-control px-3 py-2 text-[15px] font-medium transition-colors',
+      isActive ? 'bg-accent-soft text-accent' : 'text-text-muted active:bg-surface-2',
     ].join(' ');
 
   return (
@@ -66,7 +66,7 @@ export const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
         <button
           type="button"
           onClick={logout}
-          className="rounded-control border border-border px-3 py-2 text-left text-sm text-text-muted transition-colors hover:border-danger/60 hover:text-danger"
+          className="rounded-control px-3 py-2 text-left text-[15px] font-medium text-danger active:bg-surface-2"
         >
           Se déconnecter
         </button>

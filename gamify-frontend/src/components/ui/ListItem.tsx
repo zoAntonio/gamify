@@ -8,24 +8,29 @@ interface ListItemProps {
 }
 
 export const ListItem: FC<ListItemProps> = ({ children, selected = false, onClick, className = '' }) => {
-  const itemClasses = [
-    'flex w-full items-center gap-3 rounded-control border px-4 py-3 text-sm transition-colors',
-    selected ? 'border-accent bg-accent-soft text-text' : 'border-border bg-surface-2 text-text-muted',
-    onClick ? 'cursor-pointer hover:border-accent/40 hover:text-text' : '',
+  const rowClasses = [
+    'flex w-full items-center gap-3 px-4 py-3 text-left text-[15px] text-text transition-colors',
     className,
   ]
     .filter(Boolean)
     .join(' ');
 
+  const content = (
+    <>
+      <span className="flex-1">{children}</span>
+      {selected && <span className="text-[17px] font-semibold text-accent">✓</span>}
+    </>
+  );
+
   if (onClick) {
     return (
       <li>
-        <button type="button" onClick={onClick} className={`${itemClasses} text-left`}>
-          {children}
+        <button type="button" onClick={onClick} className={`${rowClasses} active:bg-surface-2`}>
+          {content}
         </button>
       </li>
     );
   }
 
-  return <li className={itemClasses}>{children}</li>;
+  return <li className={rowClasses}>{content}</li>;
 };
