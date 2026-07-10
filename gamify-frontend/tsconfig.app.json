@@ -16,7 +16,15 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
-    /* Linting */
+    /* Alias */
+    "paths": { "@/*": ["./src/*"] },
+
+    /* Linting / strictness (conventions frontend section 4.1) */
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,

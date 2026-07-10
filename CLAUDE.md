@@ -72,20 +72,30 @@ Points non négociables (grille de revue P0, cf. documents) :
 
 ## État actuel du code (à connaître avant de modifier)
 
-- Le backend suit désormais la structure en couches cible
+- Le backend suit la structure en couches cible
   (`domain/application/infrastructure/presentation`, voir
   [.claude/context/backend-workflow.md](.claude/context/backend-workflow.md) pour
   la recette détaillée d'ajout de fonctionnalité). Le socle est en place :
   `BaseEntity`, hiérarchie d'exceptions domain, `ApiResponse<T>`,
-  `GlobalExceptionHandler`, `JpaConfig`. Le flux `auth` (register/login) est le
-  premier exemple bout-en-bout à suivre comme patron pour les prochaines
-  fonctionnalités (Activités/Kanban, Progression, Badges...).
-- **Dette technique connue** : pas de filtre JWT peuplant le `SecurityContext` —
-  voir [.claude/context/roadmap.md](.claude/context/roadmap.md) section "Dette
-  technique connue". À résoudre avant le premier endpoint réellement protégé.
-- Le frontend est encore le squelette Vite par défaut (pas de structure
-  `features/`, pas de Zustand/TanStack Query/Tailwind installés) — pas encore
-  touché par ce nettoyage, qui s'est concentré sur le backend.
+  `GlobalExceptionHandler`, `JpaConfig`. Le filtre JWT est maintenant fonctionnel
+  (`JwtAuthFilter` + `UserDetailsServiceImpl` + `JsonAuthenticationEntryPoint` pour
+  un vrai 401 JSON) — les endpoints protégés marchent réellement (vérifié via
+  `GET /api/profile`). Les flux `auth` et `profile`/`domaines` (G0-T01/G0-T02) sont
+  les patrons bout-en-bout à suivre pour les prochaines fonctionnalités
+  (Activités/Kanban, Progression, Badges...).
+- Le frontend a sa première fonctionnalité réelle : `react-router-dom` + `zustand`
+  installés, alias `@/` configuré (tsconfig + vite.config), mode TypeScript strict
+  activé. Structure feature-first amorcée (`features/auth/`, `features/profile/`),
+  état d'auth global dans `src/store/useAuthStore.ts` (transverse, pas dans une
+  feature — voir règle dans
+  [frontend-workflow.md](.claude/context/frontend-workflow.md)). Toujours pas de
+  TanStack Query/Tailwind (pas encore de besoin réel).
+- **Dette connue après G0-T01/G0-T02** (détail dans
+  [.claude/context/roadmap.md](.claude/context/roadmap.md)) : `GET /api/domaines`
+  non paginé (accepté, liste petite par nature), aucun test écrit backend/frontend
+  sur cette feature, parcours frontend non vérifié par clic réel en navigateur
+  (pas d'outil d'automatisation navigateur dans cet environnement — vérifié
+  seulement via compilation/service Vite sans erreur).
 - Aucun test n'existe encore (ni JUnit côté backend, ni Vitest côté frontend).
 
 Signaler si un ticket touche du code existant non conforme, pour décider au cas

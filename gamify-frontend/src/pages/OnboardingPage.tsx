@@ -1,0 +1,82 @@
+import { useState } from 'react';
+import type { FC } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useDomaines } from '@/features/profile/hooks/useDomaines';
+import { profileService } from '@/features/profile/services/profileService';
+import { AvatarPicker } from '@/features/profile/components/AvatarPicker';
+import { DomainSelector } from '@/features/profile/components/DomainSelector';
+import type { Attribut, Avatar } from '@/features/profile/types/profile.types';
+
+export const OnboardingPage: FC = () => {
+  const { domaines, isLoading, refetch } = useDomaines();
+  const [avatar, setAvatar] = useState<Avatar | null>(null);
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isCreating, setCreating] = useState(false);
+  const [isSaving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
+
+  const toggleDomaine = (id: number) => {
+    setSelectedIds((current) =>
+      current.includes(id) ? current.filter((existing) => existing !== id) : [...current, id],
+    );
+  };
+
+  const handleCreateDomaine = async (nom: string, attributs: Attribut[]) => {
+    setCreating(true);
+    setError(null);
+    try {
+      const created = await profileService.createDomaine({ nom, attributs });
+      refetch();
+      setSelectedIds((current) => [...current, created.id]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!avatar || selectedIds.length === 0) {
+      setError('Choisis un avatar et au moins un domaine à suivre');
+      return;
+    }
+
+    setSaving(true);
+    setError(null);
+    try {
+      await profileService.updateProfile({ avatar, domaineIds: selectedIds });
+      navigate('/dashboard');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (isLoading) return <p>Chargement des domaines...</p>;
+
+  return (
+    <section className="onboarding-page">
+      <h1>Crée ton profil</h1>
+
+      <h2>Choisis ton avatar</h2>
+      <AvatarPicker value={avatar} onChange={setAvatar} />
+
+      <h2>Choisis les domaines à suivre</h2>
+      <DomainSelector
+        domaines={domaines}
+        selectedIds={selectedIds}
+        onToggle={toggleDomaine}
+        onCreateDomaine={handleCreateDomaine}
+        isCreating={isCreating}
+      />
+
+      {error && <p className="onboarding-error">{error}</p>}
+
+      <button type="button" onClick={handleSave} disabled={isSaving}>
+        {isSaving ? 'Enregistrement...' : 'Valider mon profil'}
+      </button>
+    </section>
+  );
+};

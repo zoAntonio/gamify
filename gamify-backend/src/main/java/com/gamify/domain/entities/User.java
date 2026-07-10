@@ -1,11 +1,20 @@
 package com.gamify.domain.entities;
 
+import com.gamify.domain.enums.Avatar;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -22,6 +31,17 @@ public class User extends BaseEntity {
 
     @Column(nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    private Avatar avatar;
+
+    @ManyToMany
+    @JoinTable(
+            name = "user_tracked_domains",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "domaine_id")
+    )
+    private Set<Domaine> domainesTrackes = new HashSet<>();
 
     // Attributs RPG
     private int intelligence = 0;

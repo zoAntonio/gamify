@@ -19,16 +19,32 @@ qu'un ticket passe la checklist de validation — pas avant.
 
 | Ticket | Statut | Date | Notes |
 |---|---|---|---|
-| — | — | — | Aucun ticket fonctionnel validé pour l'instant. Le nettoyage/socle backend (BaseEntity, exceptions, ApiResponse, GlobalExceptionHandler) a été fait en dehors de la numérotation de tickets — voir historique de conversation / commits pour le détail. |
+| G0-T01 | ✅ Fait | 2026-07-03 | Inscription/connexion (déjà en place depuis le socle) + bouton "Essayer en démo" (register puis fallback login sur 409, pas de compte seedé en base). |
+| G0-T02 | ✅ Fait | 2026-07-03 | Avatar (enum + emoji placeholder) + domaines trackés. Domaines rendus **personnalisables** (écart assumé vs "liste prédéfinie" du ticket original — décision utilisateur) : 5 domaines système seedés en migration + création de domaines perso par l'utilisateur. |
+| G0-T03 | ⏳ Pas commencé | — | Navigation principale + vrai tableau de bord. Un `DashboardPlaceholderPage` minimal existe en attendant (redirection post-onboarding). |
+
+**Écarts/dette introduits par G0-T01/G0-T02, notés consciemment plutôt que masqués :**
+- `GET /api/domaines` retourne une `List<DomaineResponse>` non paginée — accepté
+  car la liste (domaines système + domaines perso d'un seul utilisateur) reste
+  petite par nature ; à reconsidérer si la création de domaines perso devient
+  massive.
+- Aucun test écrit (`ProfileService`/`DomaineService` côté backend,
+  `useProfile`/`useDomaines` côté frontend) — P1 assumé pour aller vite sur la
+  première feature bout-en-bout ; à combler avant d'ajouter beaucoup de logique
+  dessus.
+- Vérification frontend limitée à : `tsc`/`oxlint` propres + serveur Vite qui
+  sert tous les modules sans erreur de résolution (alias `@/`, react-router-dom,
+  zustand). Pas de clic réel dans un navigateur (pas d'outil d'automatisation
+  navigateur disponible dans cet environnement) — à faire manuellement par
+  l'utilisateur via `scripts/dev.ps1` avant de considérer le parcours
+  garanti à 100%.
 
 ## Dette technique connue
 
-- **Filtre JWT manquant** : `SecurityConfig` protège tout endpoint hors
-  `/api/auth/**`, mais aucun filtre (`OncePerRequestFilter`) ne lit le header
-  `Authorization` pour peupler le `SecurityContext` à partir du token émis par
-  `JwtService`. Résultat actuel : tout endpoint protégé renverrait 401 même avec un
-  token valide. À corriger avant d'écrire le premier endpoint authentifié réel
-  (ex. `ActivityController`) — probablement en même temps que G1-T07.
+- ~~Filtre JWT manquant~~ — **résolu** avec G0-T02 (`JwtAuthFilter` +
+  `UserDetailsServiceImpl` + `JsonAuthenticationEntryPoint` pour un vrai 401 JSON
+  au lieu du 403 par défaut de Spring Security). Vérifié : `GET /api/profile`
+  sans token → 401 ; avec token valide → 200.
 
 ## Ordre fonctionnel conseillé (dépendances)
 
