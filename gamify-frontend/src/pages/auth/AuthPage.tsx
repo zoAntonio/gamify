@@ -71,23 +71,25 @@ export const AuthPage: FC = () => {
   };
 
   return (
-    <div className="flex min-h-svh items-center justify-center px-6 py-12">
-      <div className="flex w-full max-w-sm flex-col gap-8">
-        <div className="text-center">
-          <p className="text-[13px] font-medium text-text-muted">Gamify</p>
-          <h1 className="mt-1 text-[28px] font-semibold tracking-tight">
-            {mode === 'login' ? 'Connexion' : 'Inscription'}
+    <div className="flex min-h-svh items-center justify-center px-6 py-10">
+      <div className="flex w-full max-w-[360px] flex-col gap-5 rounded-card bg-surface-3 p-7 shadow-modal">
+        <div className="flex flex-col items-center gap-3 text-center">
+          <span className="flex h-10 w-10 items-center justify-center rounded-control bg-surface-2 font-display text-[18px] font-medium text-heading shadow-subtle">
+            G
+          </span>
+          <h1 className="font-display text-[20px] font-medium tracking-tight text-heading">
+            {mode === 'login' ? 'Connexion à Gamify' : 'Créer un compte Gamify'}
           </h1>
         </div>
 
-        <div className="flex gap-0.5 rounded-control bg-surface-2 p-1">
+        <div className="flex gap-0.5 rounded-full bg-surface-2 p-1">
           <button
             type="button"
             onClick={() => setMode('login')}
             disabled={mode === 'login'}
             className={[
-              'flex-1 rounded-[calc(var(--radius-control)-4px)] py-1.5 text-[13px] font-medium transition-colors',
-              mode === 'login' ? 'bg-surface text-text shadow-sm' : 'text-text-muted',
+              'flex-1 rounded-full py-1 text-[13px] font-medium transition-colors',
+              mode === 'login' ? 'bg-surface-3 text-white shadow-subtle' : 'text-text-muted',
             ].join(' ')}
           >
             Connexion
@@ -97,8 +99,8 @@ export const AuthPage: FC = () => {
             onClick={() => setMode('register')}
             disabled={mode === 'register'}
             className={[
-              'flex-1 rounded-[calc(var(--radius-control)-4px)] py-1.5 text-[13px] font-medium transition-colors',
-              mode === 'register' ? 'bg-surface text-text shadow-sm' : 'text-text-muted',
+              'flex-1 rounded-full py-1 text-[13px] font-medium transition-colors',
+              mode === 'register' ? 'bg-surface-3 text-white shadow-subtle' : 'text-text-muted',
             ].join(' ')}
           >
             Inscription

@@ -42,7 +42,7 @@ export const ActivityListPage: FC = () => {
   return (
     <section className="flex max-w-2xl flex-col gap-8">
       <div>
-        <h1 className="text-[28px] font-semibold tracking-tight">Tâches</h1>
+        <h1 className="font-display text-[28px] font-medium tracking-tight text-heading">Tâches</h1>
         <p className="mt-1 text-[15px] text-text-muted">
           Crée des tâches liées à tes domaines et valide-les pour gagner en attributs.
         </p>

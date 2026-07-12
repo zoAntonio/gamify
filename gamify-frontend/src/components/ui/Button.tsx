@@ -8,10 +8,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   children: ReactNode;
 }
 
+// Void Violet reste le seul accent chromatique : il est réservé au CTA principal (primary).
+// secondary/ghost restent monochromes (verre givré) pour ne pas diluer l'accent.
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'bg-accent text-white active:bg-accent-hover',
-  secondary: 'bg-surface-2 text-text active:bg-border',
-  ghost: 'bg-transparent text-accent active:text-accent-hover',
+  primary: 'rounded-input bg-accent text-white shadow-subtle active:bg-accent-hover',
+  secondary:
+    'rounded-full bg-surface-2 text-white shadow-subtle active:bg-[#bad6f71f]',
+  ghost: 'rounded-full bg-transparent text-text shadow-subtle active:text-accent-hover',
 };
 
 export const Button: FC<ButtonProps> = ({
@@ -22,7 +25,7 @@ export const Button: FC<ButtonProps> = ({
   ...rest
 }) => {
   const classes = [
-    'inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-[15px] font-semibold transition-colors',
+    'inline-flex items-center justify-center gap-2 px-4 py-2.5 text-[14px] font-medium transition-colors',
     'disabled:cursor-not-allowed disabled:opacity-40',
     fullWidth ? 'w-full' : '',
     VARIANT_CLASSES[variant],

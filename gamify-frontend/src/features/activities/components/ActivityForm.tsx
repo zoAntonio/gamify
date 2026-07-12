@@ -58,7 +58,7 @@ export const ActivityForm: FC<ActivityFormProps> = ({ onSubmit, isSubmitting }) 
   if (isLoadingDomaines) return <p className="text-[15px] text-text-muted">Chargement des domaines...</p>;
 
   return (
-    <form className="flex flex-col gap-3 rounded-card bg-surface p-4" onSubmit={handleSubmit}>
+    <form className="flex flex-col gap-3 rounded-card bg-surface p-4 shadow-glass" onSubmit={handleSubmit}>
       <TextField
         id="activity-nom"
         label="Nom de la tâche"

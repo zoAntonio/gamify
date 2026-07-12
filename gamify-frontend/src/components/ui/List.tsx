@@ -7,7 +7,10 @@ interface ListProps {
 
 export const List: FC<ListProps> = ({ children, className = '' }) => (
   <ul
-    className={['divide-y divide-border overflow-hidden rounded-card bg-surface', className]
+    className={[
+      'divide-y divide-border overflow-hidden rounded-card bg-surface shadow-glass',
+      className,
+    ]
       .filter(Boolean)
       .join(' ')}
   >

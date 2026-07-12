@@ -55,7 +55,7 @@ export const DomainSelector: FC<DomainSelectorProps> = ({
         ))}
       </List>
 
-      <form className="flex flex-col gap-3 rounded-card bg-surface p-4" onSubmit={handleCreate}>
+      <form className="flex flex-col gap-3 rounded-card bg-surface p-4 shadow-glass" onSubmit={handleCreate}>
         <TextField
           id="domaine-nom"
           label="Nouveau domaine"
@@ -74,8 +74,8 @@ export const DomainSelector: FC<DomainSelectorProps> = ({
                 onClick={() => toggleAttribut(attribut)}
                 aria-pressed={isSelected}
                 className={[
-                  'rounded-full px-3 py-1.5 text-[13px] font-medium transition-colors',
-                  isSelected ? 'bg-accent text-white' : 'bg-surface-2 text-text-muted',
+                  'rounded-input px-3 py-1.5 text-[13px] font-medium transition-colors',
+                  isSelected ? 'bg-accent text-white' : 'bg-surface-2 text-text-muted shadow-subtle',
                 ].join(' ')}
               >
                 {attribut}

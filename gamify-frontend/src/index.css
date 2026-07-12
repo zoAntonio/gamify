@@ -1,40 +1,76 @@
 @import 'tailwindcss';
 
+/*
+ * Thème "Frosted glass cathedral at midnight" — voir DESIGN.md à la racine du repo.
+ * Untitled Sans / aeonikPro / dotDigital ne sont pas des polices distribuables ;
+ * on utilise les substituts recommandés par la référence (Inter / Space Grotesk / JetBrains Mono).
+ */
 @theme {
-  --color-bg: #f2f2f7;
-  --color-surface: #ffffff;
-  --color-surface-2: #e9e9eb;
-  --color-border: #d1d1d6;
-  --color-text: #1c1c1e;
-  --color-text-muted: #8e8e93;
-  --color-accent: #007aff;
-  --color-accent-hover: #0066d6;
-  --color-accent-soft: rgba(0, 122, 255, 0.12);
-  --color-danger: #ff3b30;
-  --color-success: #34c759;
+  --color-bg: #05060f; /* Midnight Canvas */
+  --color-surface: #bad6f708; /* Frosted Glass — cartes translucides */
+  --color-surface-2: #bad6f70f; /* frost wash — boutons ghost, puces, hover */
+  --color-surface-3: #05060ff7; /* Deep Glass — modale, carte d'auth */
+  --color-input: #c7d3ea0f; /* fond des champs de saisie */
+  --color-border: #bad7f71f; /* Glass Edge — hairline givré, 1px inset partout */
+
+  --color-text: #d1e4fa; /* Frost Glow — texte principal */
+  --color-text-muted: #c7d3ea; /* Moon Mist — texte secondaire */
+  --color-text-faint: #9da7ba; /* Fog Veil — texte tertiaire / helper */
+  --color-heading: #d8ecf8; /* Ice Highlight — titres */
+
+  --color-accent: #663af3; /* Void Violet — seul accent chromatique : CTA + états sélectionnés */
+  --color-accent-hover: #7c52f5;
+  --color-accent-soft: #663af329;
+  --color-danger: #ff6b5c;
+  --color-success: #34d399;
 
   /* Couleurs des attributs RPG (Phase 1) — un seul endroit à changer pour un reskin */
-  --color-int: #007aff;
-  --color-for: #ff3b30;
-  --color-vit: #34c759;
-  --color-pre: #ffcc00;
-  --color-cha: #ff2d55;
-  --color-res: #30b0c7;
+  --color-int: #3b9dff;
+  --color-for: #ff6b5c;
+  --color-vit: #34d399;
+  --color-pre: #f6c945;
+  --color-cha: #ff5c8a;
+  --color-res: #45c2d6;
 
-  --radius-card: 1rem;
-  --radius-control: 0.75rem;
+  --radius-card: 1rem; /* 16px — cartes, modales */
+  --radius-control: 0.625rem; /* 10px — chrome des contrôles (nav, boutons icône) */
+  --radius-input: 0.375rem; /* 6px — champs, badges, CTA violet */
+  --radius-icon: 9999px; /* conteneurs d'icônes circulaires */
+
+  --shadow-glass: inset 0 1px 1px rgba(199, 211, 234, 0.12), inset 0 24px 48px rgba(199, 211, 234, 0.05),
+    0 24px 32px rgba(6, 6, 14, 0.7);
+  --shadow-modal: inset 0 1px 1px rgba(216, 236, 248, 0.2), inset 0 24px 48px rgba(168, 216, 245, 0.06),
+    0 16px 32px rgba(0, 0, 0, 0.3);
+  --shadow-subtle: rgba(186, 215, 247, 0.12) 0px 0px 0px 1px inset; /* hairline givré universel */
+  --shadow-subtle-focus: rgba(186, 215, 247, 0.24) 0px 0px 0px 1px inset;
 
   --font-sans:
-    -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 body {
   margin: 0;
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  background-image:
+    conic-gradient(from 180deg at 50% -20%, transparent 42%, rgba(124, 145, 182, 0.22) 50%, transparent 58%),
+    linear-gradient(rgba(186, 215, 247, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(186, 215, 247, 0.05) 1px, transparent 1px);
+  background-size:
+    100% 640px,
+    88px 88px,
+    88px 88px;
+  background-position:
+    center top,
+    center,
+    center;
+  background-repeat: no-repeat, repeat, repeat;
+  background-attachment: fixed;
   color: var(--color-text);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
