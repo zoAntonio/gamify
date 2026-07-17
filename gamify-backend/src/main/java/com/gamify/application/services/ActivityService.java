@@ -4,6 +4,7 @@ import com.gamify.application.dtos.activity.ActivityRequest;
 import com.gamify.application.dtos.activity.ActivityResponse;
 import com.gamify.domain.entities.Activity;
 import com.gamify.domain.entities.Domaine;
+import com.gamify.domain.entities.ProgressionLog;
 import com.gamify.domain.entities.User;
 import com.gamify.domain.enums.Attribut;
 import com.gamify.domain.enums.StatutKanban;
@@ -12,6 +13,7 @@ import com.gamify.domain.exceptions.ForbiddenException;
 import com.gamify.domain.exceptions.NotFoundException;
 import com.gamify.infrastructure.persistence.ActivityRepository;
 import com.gamify.infrastructure.persistence.DomaineRepository;
+import com.gamify.infrastructure.persistence.ProgressionLogRepository;
 import com.gamify.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ public class ActivityService {
     private final ActivityRepository activityRepository;
     private final DomaineRepository domaineRepository;
     private final UserRepository userRepository;
+    private final ProgressionLogRepository progressionLogRepository;
 
     @Transactional
     public ActivityResponse create(String email, ActivityRequest request) {
@@ -112,9 +115,19 @@ public class ActivityService {
         activity.setCompletedAt(LocalDateTime.now());
         activityRepository.save(activity);
 
+        int xpAvant = user.getXpTotal();
         user.appliquerGainAttribut(activity.getAttributCible());
         user.ajouterXp(activity.getXpRecompense());
         userRepository.save(user);
+
+        ProgressionLog logEntry = new ProgressionLog();
+        logEntry.setUser(user);
+        logEntry.setXpAvant(xpAvant);
+        logEntry.setXpApres(user.getXpTotal());
+        logEntry.setDelta(1);
+        logEntry.setSource(activity.getNom());
+        logEntry.setAttribut(activity.getAttributCible().name());
+        progressionLogRepository.save(logEntry);
 
         log.info("Tâche '{}' validée par {} (+1 {}, +{} XP)",
                 activity.getNom(), email, activity.getAttributCible(), activity.getXpRecompense());
