@@ -7,12 +7,12 @@ export const AppLayout: FC = () => {
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (
-    <div className="flex min-h-svh bg-bg text-text">
+    <div className="flex min-h-svh text-text">
       <Sidebar isOpen={isMobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3 md:hidden">
-          <span className="text-[17px] font-semibold">Gamify</span>
+        <header className="flex items-center justify-between border-b border-border bg-surface-3/80 px-4 py-3 backdrop-blur-md md:hidden">
+          <span className="font-display text-[17px] font-medium text-heading">Gamify</span>
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}

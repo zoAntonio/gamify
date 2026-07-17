@@ -6,6 +6,9 @@ import { AppLayout } from '@/components/shared/AppLayout';
 import { AuthPage } from '@/pages/auth/AuthPage';
 import { OnboardingPage } from '@/pages/OnboardingPage';
 import { DashboardPlaceholderPage } from '@/pages/dashboard/DashboardPlaceholderPage';
+import { ActivityListPage } from '@/pages/activities/ActivityListPage';
+import { AgendaPage } from '@/pages/agenda/AgendaPage';
+import { HabitsPage } from '@/pages/habits/HabitsPage';
 import { UnauthorizedPage } from '@/pages/errors/UnauthorizedPage';
 import { ForbiddenPage } from '@/pages/errors/ForbiddenPage';
 import { NotFoundPage } from '@/pages/errors/NotFoundPage';
@@ -21,6 +24,9 @@ export const AppRouter: FC = () => {
           <Route element={<AppLayout />}>
             <Route path="/onboarding" element={<OnboardingPage />} />
             <Route path="/dashboard" element={<DashboardPlaceholderPage />} />
+            <Route path="/activities" element={<ActivityListPage />} />
+            <Route path="/agenda" element={<AgendaPage />} />
+            <Route path="/habits" element={<HabitsPage />} />
           </Route>
         </Route>
 

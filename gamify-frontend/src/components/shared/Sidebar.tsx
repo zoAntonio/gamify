@@ -14,6 +14,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { to: '/dashboard', label: 'Tableau de bord' },
+  { to: '/activities', label: 'Tâches' },
+  { to: '/agenda', label: 'Agenda' },
+  { to: '/habits', label: 'Habitudes' },
   { to: '/onboarding', label: 'Profil' },
 ];
 
@@ -35,14 +38,14 @@ export const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       <aside
         className={[
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-6 border-r border-border bg-surface p-6',
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col gap-6 border-r border-border bg-surface-3/90 p-6 backdrop-blur-md',
           'transition-transform md:static md:translate-x-0',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-lg font-semibold">Gamify</p>
+            <p className="font-display text-lg font-medium text-heading">Gamify</p>
             {username && <p className="text-sm text-text-muted">{username}</p>}
           </div>
           <button

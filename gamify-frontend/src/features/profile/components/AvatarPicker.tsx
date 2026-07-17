@@ -26,7 +26,7 @@ export const AvatarPicker: FC<AvatarPickerProps> = ({ value, onChange }) => {
             aria-pressed={isSelected}
             className={[
               'flex flex-col items-center gap-1 rounded-card px-4 py-3 text-[13px] font-medium transition-colors',
-              isSelected ? 'bg-accent text-white' : 'bg-surface-2 text-text-muted',
+              isSelected ? 'bg-accent text-white' : 'bg-surface-2 text-text-muted shadow-subtle',
             ].join(' ')}
           >
             <span className="text-2xl" role="img" aria-label={option.label}>
