@@ -8,3 +8,6 @@ target/
 
 # Logs
 *.log
+
+# Fichiers uploadés par les utilisateurs (avatars) — contenu généré, jamais versionné
+uploads/

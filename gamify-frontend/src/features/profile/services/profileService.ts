@@ -16,4 +16,10 @@ export const profileService = {
 
   createDomaine: (request: CreateDomaineRequest): Promise<Domaine> =>
     apiClient.post<Domaine>('/domaines', request),
+
+  uploadAvatar: (file: File): Promise<ProfileResponse> => {
+    const form = new FormData();
+    form.append('file', file);
+    return apiClient.postForm<ProfileResponse>('/profile/avatar', form);
+  },
 };

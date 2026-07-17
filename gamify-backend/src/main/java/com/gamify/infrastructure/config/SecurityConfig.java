@@ -41,6 +41,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                // Avatars publics : les <img> ne peuvent pas envoyer le JWT.
+                // Noms de fichiers UUID non devinables — compromis assumé (roadmap).
+                .requestMatchers("/uploads/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

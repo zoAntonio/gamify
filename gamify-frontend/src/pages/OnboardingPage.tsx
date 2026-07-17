@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDomaines } from '@/features/profile/hooks/useDomaines';
 import { profileService } from '@/features/profile/services/profileService';
 import { AvatarPicker } from '@/features/profile/components/AvatarPicker';
+import { AvatarUpload } from '@/features/profile/components/AvatarUpload';
 import { DomainSelector } from '@/features/profile/components/DomainSelector';
 import { Button } from '@/components/ui/Button';
 import type { Attribut, Avatar } from '@/features/profile/types/profile.types';
@@ -71,6 +72,14 @@ export const OnboardingPage: FC = () => {
       <div className="flex flex-col gap-3">
         <h2 className="text-[17px] font-semibold text-text">Choisis ton avatar</h2>
         <AvatarPicker value={avatar} onChange={setAvatar} />
+      </div>
+
+      <div className="flex flex-col gap-3">
+        <h2 className="text-[17px] font-semibold text-text">Photo de profil (optionnel)</h2>
+        <p className="-mt-2 text-[13px] text-text-muted">
+          Affichée sur ta carte de personnage, à la place de l'emoji de classe.
+        </p>
+        <AvatarUpload />
       </div>
 
       <div className="flex flex-col gap-3">

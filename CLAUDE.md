@@ -75,28 +75,27 @@ Points non négociables (grille de revue P0, cf. documents) :
 - Le backend suit la structure en couches cible
   (`domain/application/infrastructure/presentation`, voir
   [.claude/context/backend-workflow.md](.claude/context/backend-workflow.md) pour
-  la recette détaillée d'ajout de fonctionnalité). Le socle est en place :
-  `BaseEntity`, hiérarchie d'exceptions domain, `ApiResponse<T>`,
-  `GlobalExceptionHandler`, `JpaConfig`. Le filtre JWT est maintenant fonctionnel
-  (`JwtAuthFilter` + `UserDetailsServiceImpl` + `JsonAuthenticationEntryPoint` pour
-  un vrai 401 JSON) — les endpoints protégés marchent réellement (vérifié via
-  `GET /api/profile`). Les flux `auth` et `profile`/`domaines` (G0-T01/G0-T02) sont
-  les patrons bout-en-bout à suivre pour les prochaines fonctionnalités
-  (Activités/Kanban, Progression, Badges...).
-- Le frontend a sa première fonctionnalité réelle : `react-router-dom` + `zustand`
-  installés, alias `@/` configuré (tsconfig + vite.config), mode TypeScript strict
-  activé. Structure feature-first amorcée (`features/auth/`, `features/profile/`),
-  état d'auth global dans `src/store/useAuthStore.ts` (transverse, pas dans une
-  feature — voir règle dans
-  [frontend-workflow.md](.claude/context/frontend-workflow.md)). Toujours pas de
-  TanStack Query/Tailwind (pas encore de besoin réel).
-- **Dette connue après G0-T01/G0-T02** (détail dans
-  [.claude/context/roadmap.md](.claude/context/roadmap.md)) : `GET /api/domaines`
-  non paginé (accepté, liste petite par nature), aucun test écrit backend/frontend
-  sur cette feature, parcours frontend non vérifié par clic réel en navigateur
-  (pas d'outil d'automatisation navigateur dans cet environnement — vérifié
-  seulement via compilation/service Vite sans erreur).
-- Aucun test n'existe encore (ni JUnit côté backend, ni Vitest côté frontend).
+  la recette détaillée d'ajout de fonctionnalité). Socle en place : `BaseEntity`,
+  hiérarchie d'exceptions domain, `ApiResponse<T>`, `GlobalExceptionHandler`,
+  filtre JWT fonctionnel, Swagger. Features livrées : auth, profil/domaines
+  (+ upload de photo d'avatar servie sur `/uploads/**`, public), tâches/kanban
+  (`Activity`, statuts + récompenses), habitudes/streaks (`Habit`/`HabitCompletion`),
+  agenda (`AgendaEvent`), stats (`ProgressionLog` historisé à chaque gain,
+  `/api/stats/progression` + `/api/stats/journal`), niveaux/titres
+  (`User.ajouterXp`, seuils doublants). Migrations jusqu'à **V7**.
+- Le frontend est en structure feature-first complète : `features/auth`, `profile`,
+  `activities` (kanban 3 colonnes drag & drop), `agenda` (vues semaine/jour/mois),
+  `habits` (grille type HabitKit), `dashboard` (carte du personnage FIFA-like,
+  radar/barres d'attributs SVG faits main, XP par période, journal). UI générique
+  dans `components/ui/` (`Button`, `Modal`, `Select`, `TextField`...), thème
+  Tailwind v4 dans `index.css` (tokens couleurs/attributs). `react-router-dom` +
+  `zustand` ; toujours pas de TanStack Query (hooks fetch maison par feature).
+- Dette courante et écarts assumés : voir la section "Suivi d'avancement" et les
+  blocs "Écarts/dette" de [.claude/context/roadmap.md](.claude/context/roadmap.md)
+  — c'est la source de vérité, tenue à jour à chaque feature.
+- Aucun test automatisé n'existe encore (ni JUnit côté backend, ni Vitest côté
+  frontend) ; la vérification se fait par compilation + appels HTTP réels (curl),
+  le parcours navigateur restant manuel (pas d'outil d'automatisation ici).
 
 Signaler si un ticket touche du code existant non conforme, pour décider au cas
 par cas de le remettre aux normes.

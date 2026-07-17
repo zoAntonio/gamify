@@ -15,9 +15,13 @@ export interface ProfileResponse {
   username: string;
   email: string;
   avatar: Avatar | null;
+  avatarUrl: string | null;
   domainesTrackes: Domaine[];
   niveau: number;
+  titre: string;
   xpTotal: number;
+  xpProchainNiveau: number;
+  attributs: Record<Attribut, number>;
 }
 
 export interface UpdateProfileRequest {

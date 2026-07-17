@@ -5,6 +5,7 @@ import com.gamify.application.dtos.habit.HabitResponse;
 import com.gamify.domain.entities.Domaine;
 import com.gamify.domain.entities.Habit;
 import com.gamify.domain.entities.HabitCompletion;
+import com.gamify.domain.entities.ProgressionLog;
 import com.gamify.domain.entities.User;
 import com.gamify.domain.exceptions.ConflictException;
 import com.gamify.domain.exceptions.DomainException;
@@ -13,6 +14,7 @@ import com.gamify.domain.exceptions.NotFoundException;
 import com.gamify.infrastructure.persistence.DomaineRepository;
 import com.gamify.infrastructure.persistence.HabitCompletionRepository;
 import com.gamify.infrastructure.persistence.HabitRepository;
+import com.gamify.infrastructure.persistence.ProgressionLogRepository;
 import com.gamify.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +41,7 @@ public class HabitService {
     private final HabitCompletionRepository completionRepository;
     private final DomaineRepository domaineRepository;
     private final UserRepository userRepository;
+    private final ProgressionLogRepository progressionLogRepository;
 
     @Transactional
     public HabitResponse create(String email, HabitRequest request) {
@@ -85,13 +88,17 @@ public class HabitService {
         completion.setDateCompletion(today);
         completionRepository.save(completion);
 
+        int xpAvant = user.getXpTotal();
         user.appliquerGainAttribut(habit.getAttributCible());
         user.ajouterXp(habit.getXpRecompense());
+        saveProgressionLog(user, xpAvant, 1, habit.getNom(), habit.getAttributCible().name());
 
         int streak = computeCurrentStreak(habitId, today);
         boolean bonus = streak > 0 && streak % 7 == 0;
         if (bonus) {
+            int xpAvantBonus = user.getXpTotal();
             user.ajouterXp(STREAK_BONUS_XP);
+            saveProgressionLog(user, xpAvantBonus, 0, "Bonus série 7 jours — " + habit.getNom(), null);
         }
         if (streak > habit.getMeilleurStreak()) {
             habit.setMeilleurStreak(streak);
@@ -103,6 +110,17 @@ public class HabitService {
                 habit.getNom(), email, habit.getAttributCible(), habit.getXpRecompense(),
                 bonus ? " +" + STREAK_BONUS_XP + " bonus série" : "", streak);
         return toResponse(habit);
+    }
+
+    private void saveProgressionLog(User user, int xpAvant, int delta, String source, String attribut) {
+        ProgressionLog logEntry = new ProgressionLog();
+        logEntry.setUser(user);
+        logEntry.setXpAvant(xpAvant);
+        logEntry.setXpApres(user.getXpTotal());
+        logEntry.setDelta(delta);
+        logEntry.setSource(source);
+        logEntry.setAttribut(attribut);
+        progressionLogRepository.save(logEntry);
     }
 
     private Habit findOwnedHabit(Long habitId, User user) {
