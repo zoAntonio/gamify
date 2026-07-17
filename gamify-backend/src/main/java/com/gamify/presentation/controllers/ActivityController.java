@@ -3,6 +3,7 @@ package com.gamify.presentation.controllers;
 import com.gamify.application.dtos.ApiResponse;
 import com.gamify.application.dtos.activity.ActivityRequest;
 import com.gamify.application.dtos.activity.ActivityResponse;
+import com.gamify.application.dtos.activity.ActivityStatutRequest;
 import com.gamify.application.services.ActivityService;
 import com.gamify.domain.enums.Attribut;
 import com.gamify.domain.enums.StatutKanban;
@@ -14,6 +15,7 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -52,6 +54,18 @@ public class ActivityController {
         return ApiResponse.success(
                 activityService.create(authentication.getName(), request),
                 "Tâche créée"
+        );
+    }
+
+    @PatchMapping("/{id}/statut")
+    public ApiResponse<ActivityResponse> changerStatut(
+            Authentication authentication,
+            @PathVariable Long id,
+            @Valid @RequestBody ActivityStatutRequest request
+    ) {
+        return ApiResponse.success(
+                activityService.changerStatut(authentication.getName(), id, request.statut()),
+                "Statut mis à jour"
         );
     }
 

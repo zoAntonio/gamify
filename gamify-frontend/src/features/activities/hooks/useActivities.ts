@@ -23,7 +23,8 @@ export const useActivities = (): UseActivitiesReturn => {
     const load = async () => {
       try {
         setLoading(true);
-        const data = await activityService.listActivities();
+        // Le board kanban affiche tout d'un coup — taille large plutôt que pagination UI.
+        const data = await activityService.listActivities({ size: 100 });
         if (!cancelled) setPage(data);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err : new Error('Erreur inconnue'));

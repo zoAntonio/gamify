@@ -4,6 +4,7 @@ import type {
   ActivityRequest,
   DomaineOption,
   PageResponse,
+  StatutKanban,
 } from '@/features/activities/types/activity.types';
 
 interface ListActivitiesParams {
@@ -35,4 +36,7 @@ export const activityService = {
 
   validerActivity: (id: number): Promise<Activity> =>
     apiClient.post<Activity>(`/activities/${id}/valider`),
+
+  changerStatut: (id: number, statut: StatutKanban): Promise<Activity> =>
+    apiClient.patch<Activity>(`/activities/${id}/statut`, { statut }),
 };

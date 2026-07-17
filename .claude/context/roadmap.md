@@ -23,7 +23,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G0-T02 | ✅ Fait | 2026-07-03 | Avatar (enum + emoji placeholder) + domaines trackés. Domaines rendus **personnalisables** (écart assumé vs "liste prédéfinie" du ticket original — décision utilisateur) : 5 domaines système seedés en migration + création de domaines perso par l'utilisateur. |
 | G0-T03 | 🔶 Partiel | 2026-07-10 | Navigation principale faite (`Sidebar`/`AppLayout`, responsive). Vrai tableau de bord (niveau, XP, attributs, résumé du jour, streak, dernier badge) toujours pas fait — `DashboardPlaceholderPage` minimal en attendant. |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
-| G1-T09 | 🔶 Partiel | 2026-07-10 | Vue liste des tâches faite (page `/activities`, création + validation). Backend supporte filtres domaine/attribut/statut + tri via `ActivityRepository.search` mais **pas encore d'UI de filtres/tri** côté frontend. Pas de calcul de ratio réalisé/objectif (`objectif` reste un champ descriptif libre, pas de suivi numérique). |
+| G1-T09 | 🔶 Partiel | 2026-07-17 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`). Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). Toujours **pas d'UI de filtres/tri** ni de ratio réalisé/objectif. |
 
 **Écarts/dette introduits par G0-T01/G0-T02, notés consciemment plutôt que masqués :**
 - `GET /api/domaines` retourne une `List<DomaineResponse>` non paginée — accepté
@@ -55,6 +55,21 @@ qu'un ticket passe la checklist de validation — pas avant.
 - Vérifié en revanche via appels HTTP réels (curl) sur le compte démo : create
   ×6, valider ×3 (+ re-validation refusée), liste paginée cohérente,
   `xpTotal` incrémenté (150 après 3×50) — pas seulement `tsc`/compile.
+
+**Écarts/dette introduits par le kanban G1-T09 (2026-07-17) :**
+- Backend vérifié par appels HTTP réels (compte de test jetable) : création,
+  A_FAIRE→EN_COURS, EN_COURS→TERMINE (+50 XP constaté sur `/profile`,
+  `completedAt` posé), TERMINE→A_FAIRE refusé en 400 "Cette tâche est déjà
+  validée". Frontend vérifié seulement via `tsc`/`oxlint`/`vite build` propres —
+  toujours pas de clic réel en navigateur (même limite d'environnement
+  qu'avant), à tester manuellement via `scripts/dev.ps1` (drag & drop inclus).
+- Drag & drop en HTML5 natif (pas de lib) : suffisant desktop, mais **pas de
+  support tactile** — les boutons "Commencer"/"Valider" sur les cartes servent
+  de fallback mobile en attendant (à revoir pour Capacitor).
+- Le board charge `size=100` sans pagination UI (accepté : volumétrie mono-
+  utilisateur faible ; à revoir si besoin).
+- `ActivityListItem` supprimé (remplacé par `ActivityCard`). Toujours aucun test
+  automatisé sur la feature.
 
 ## Dette technique connue
 

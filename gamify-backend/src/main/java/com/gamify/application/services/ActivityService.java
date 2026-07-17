@@ -74,6 +74,36 @@ public class ActivityService {
         User user = findUserByEmail(email);
         Activity activity = findOwnedActivity(activityId, user);
 
+        terminer(activity, user, email);
+        return toResponse(activity);
+    }
+
+    @Transactional
+    public ActivityResponse changerStatut(String email, Long activityId, StatutKanban statut) {
+        User user = findUserByEmail(email);
+        Activity activity = findOwnedActivity(activityId, user);
+
+        if (activity.getStatut() == statut) {
+            return toResponse(activity);
+        }
+
+        // Une tâche terminée a déjà donné ses récompenses : on ne la remet pas en jeu.
+        if (activity.getStatut() == StatutKanban.TERMINE) {
+            throw new DomainException("Cette tâche est déjà validée");
+        }
+
+        if (statut == StatutKanban.TERMINE) {
+            terminer(activity, user, email);
+        } else {
+            activity.setStatut(statut);
+            activityRepository.save(activity);
+            log.info("Tâche '{}' déplacée en {} par {}", activity.getNom(), statut, email);
+        }
+
+        return toResponse(activity);
+    }
+
+    private void terminer(Activity activity, User user, String email) {
         if (activity.getStatut() == StatutKanban.TERMINE) {
             throw new DomainException("Cette tâche est déjà validée");
         }
@@ -88,7 +118,6 @@ public class ActivityService {
 
         log.info("Tâche '{}' validée par {} (+1 {}, +{} XP)",
                 activity.getNom(), email, activity.getAttributCible(), activity.getXpRecompense());
-        return toResponse(activity);
     }
 
     private Activity findOwnedActivity(Long activityId, User user) {
