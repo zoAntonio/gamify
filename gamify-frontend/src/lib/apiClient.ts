@@ -1,6 +1,8 @@
 import { useAuthStore } from '@/store/useAuthStore';
 
-const API_BASE_URL = 'http://localhost:8081/api';
+export const API_ORIGIN = 'http://localhost:8081';
+
+const API_BASE_URL = `${API_ORIGIN}/api`;
 
 interface ApiResponse<T> {
   success: boolean;
@@ -11,11 +13,13 @@ interface ApiResponse<T> {
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = useAuthStore.getState().token;
+  // Pour un FormData, le navigateur pose lui-même le Content-Type multipart (boundary).
+  const isFormData = options.body instanceof FormData;
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers: {
-      'Content-Type': 'application/json',
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
       ...options.headers,
     },
@@ -45,4 +49,5 @@ export const apiClient = {
   patch: <T>(path: string, body?: unknown) =>
     request<T>(path, { method: 'PATCH', body: body !== undefined ? JSON.stringify(body) : null }),
   delete: <T>(path: string) => request<T>(path, { method: 'DELETE' }),
+  postForm: <T>(path: string, form: FormData) => request<T>(path, { method: 'POST', body: form }),
 };

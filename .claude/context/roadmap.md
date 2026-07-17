@@ -91,6 +91,27 @@ qu'un ticket passe la checklist de validation — pas avant.
 - Toujours aucun test automatisé (le calcul de streak de `HabitService` serait
   le premier bon candidat JUnit).
 
+**Écarts/dette introduits par le dashboard G0-T03/G1-T04/G1-T05/G1-T06 (2026-07-17) :**
+- Backend vérifié par HTTP réel : 2 validations → niveau 2 "Initié" (100 XP, seuil
+  300), journal 2 lignes, progression SEMAINE/ANNEE avec bons buckets, upload PNG
+  → fichier redimensionné sur disque + servi en 200 sans token (bug `Path.toUri()`
+  sans slash final corrigé dans `WebConfig`), mauvais format refusé 400. Frontend :
+  `tsc`/`oxlint`/`vite build` seulement — parcours navigateur manuel à faire
+  (dashboard, upload photo, graphiques).
+- `/uploads/**` est public (les `<img>` ne peuvent pas porter le JWT) — protégé
+  seulement par noms de fichiers UUID non devinables. À revoir si les photos
+  deviennent sensibles (URL signées ou proxy authentifié).
+- Palette des 6 couleurs d'attributs passée au validateur dataviz : CVD, chroma
+  et contraste OK, mais "lightness band" en échec (le jaune PRE ressort plus que
+  le bleu INT). Couleurs = tokens produit globaux, non modifiés ici ; mitigation :
+  chaque marque graphique porte son libellé et sa valeur en texte. À traiter si
+  reskin du thème.
+- L'origine backend (`http://localhost:8081`) est en dur dans `apiClient`
+  (préexistant, maintenant exporté aussi pour les images) — à passer en variable
+  d'environnement Vite avant tout déploiement.
+- Toujours aucun test automatisé (`User.ajouterXp`/seuils et l'agrégation
+  `StatsService` seraient les premiers bons candidats).
+
 ## Dette technique connue
 
 - ~~Filtre JWT manquant~~ — **résolu** avec G0-T02 (`JwtAuthFilter` +
