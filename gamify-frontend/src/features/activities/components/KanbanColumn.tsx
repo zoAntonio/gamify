@@ -35,6 +35,8 @@ export const KanbanColumn: FC<KanbanColumnProps> = ({
   return (
     <div
       className={[
+        // < md : colonne de 85% de large dans le rail à défilement horizontal (snap) ; ≥ md : cellule de grille.
+        'w-[85%] shrink-0 snap-center md:w-auto md:shrink',
         'flex min-h-[240px] flex-col gap-3 rounded-card p-3 transition-colors',
         isDragOver ? 'bg-accent-soft' : 'bg-surface-2',
       ].join(' ')}

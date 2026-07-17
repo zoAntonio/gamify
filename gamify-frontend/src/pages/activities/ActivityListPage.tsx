@@ -71,7 +71,7 @@ export const ActivityListPage: FC = () => {
       {error && <p className="text-[15px] text-danger">{error.message}</p>}
 
       {!isLoading && !error && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0">
           {COLUMNS.map((column) => {
             const columnActivities = activities.filter((activity) => activity.statut === column.statut);
             return (

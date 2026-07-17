@@ -23,7 +23,9 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G0-T02 | ✅ Fait | 2026-07-03 | Avatar (enum + emoji placeholder) + domaines trackés. Domaines rendus **personnalisables** (écart assumé vs "liste prédéfinie" du ticket original — décision utilisateur) : 5 domaines système seedés en migration + création de domaines perso par l'utilisateur. |
 | G0-T03 | 🔶 Partiel | 2026-07-10 | Navigation principale faite (`Sidebar`/`AppLayout`, responsive). Vrai tableau de bord (niveau, XP, attributs, résumé du jour, streak, dernier badge) toujours pas fait — `DashboardPlaceholderPage` minimal en attendant. |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
-| G1-T09 | 🔶 Partiel | 2026-07-17 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`). Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). Toujours **pas d'UI de filtres/tri** ni de ratio réalisé/objectif. |
+| G1-T10 | 🔶 Partiel | 2026-07-17 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. Pas encore de récurrence ni resize par poignée. |
+| G1-T11 | 🔶 Partiel | 2026-07-17 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours), streak courant + record personnel séparé (`Habit.meilleurStreak`). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check du jour refusé (409). Reste : notifications (G1-T12), décocher, éditer/supprimer une habitude. |
+| G1-T09 | 🔶 Partiel | 2026-07-17 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`, hauteur bornée + scroll interne pour le paysage mobile). Responsive : rail horizontal à snap (une colonne ≈ 85% de l'écran) sous `md`, grille 3 colonnes au-dessus ; `viewport-fit=cover` ajouté pour les écrans à encoche. Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). Toujours **pas d'UI de filtres/tri** ni de ratio réalisé/objectif. |
 
 **Écarts/dette introduits par G0-T01/G0-T02, notés consciemment plutôt que masqués :**
 - `GET /api/domaines` retourne une `List<DomaineResponse>` non paginée — accepté
@@ -70,6 +72,24 @@ qu'un ticket passe la checklist de validation — pas avant.
   utilisateur faible ; à revoir si besoin).
 - `ActivityListItem` supprimé (remplacé par `ActivityCard`). Toujours aucun test
   automatisé sur la feature.
+
+**Écarts/dette introduits par G1-T10/G1-T11 (2026-07-17) :**
+- Backend vérifié par HTTP réel (compte jetable) : habitude créée → check (+1 INT
+  constaté **en base**, +10 XP sur `/profile`), re-check 409, streak 7 obtenu en
+  antidatant 6 completions en SQL → bonus +10 XP et record 7 confirmés ; agenda :
+  événement libre + lié (couleur suit le statut de la tâche → TERMINE), 400 si
+  fin ≤ début, bornage `from`/`to`, déplacement PUT, suppression, 404 tâche
+  inconnue. Frontend vérifié via `tsc`/`oxlint`/`vite build` seulement — parcours
+  navigateur à faire manuellement (même limite d'environnement que d'habitude).
+- `/api/profile` n'expose pas les attributs RPG (seulement XP/niveau) — le
+  feedback "+1 INT" ne peut pas être affiché précisément côté UI tant que le
+  DTO profil ne les renvoie pas (à traiter avec G1-T04/G1-T06).
+- Habitudes : pas de décocher (le gain est déjà appliqué — choix assumé), pas
+  d'édition/suppression (suppression = action destructive à confirmer, v2).
+- Agenda : pas de récurrence, pas de resize par poignée, drag 1h de granularité,
+  chevauchement d'événements non géré visuellement (ils se superposent).
+- Toujours aucun test automatisé (le calcul de streak de `HabitService` serait
+  le premier bon candidat JUnit).
 
 ## Dette technique connue
 

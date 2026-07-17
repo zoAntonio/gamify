@@ -31,7 +31,7 @@ export const Modal: FC<ModalProps> = ({ isOpen, title, onClose, children }) => {
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        className="w-full max-w-md rounded-card bg-surface-3 p-6 shadow-modal"
+        className="max-h-[90dvh] w-full max-w-md overflow-y-auto overscroll-contain rounded-card bg-surface-3 p-6 shadow-modal"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-4 flex items-center justify-between">
