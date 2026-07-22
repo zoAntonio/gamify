@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { habitService } from '@/features/habits/services/habitService';
+import { runOptimistic } from '@/utils/optimistic';
 import type { Habit, PageResponse } from '@/features/habits/types/habit.types';
 
 interface UseHabitsReturn {
@@ -7,7 +8,15 @@ interface UseHabitsReturn {
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
+  toggleHabit: (id: number) => Promise<Error | null>;
 }
+
+const toIsoDate = (date: Date): string => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 
 export const useHabits = (): UseHabitsReturn => {
   const [page, setPage] = useState<PageResponse<Habit> | null>(null);
@@ -38,5 +47,36 @@ export const useHabits = (): UseHabitsReturn => {
     };
   }, [refetchToken]);
 
-  return { habits: page?.content ?? [], isLoading, error, refetch };
+  // Optimistic UI : coche + streak incrémentés immédiatement, rollback si l'appel échoue.
+  const toggleHabit = useCallback(
+    async (id: number): Promise<Error | null> => {
+      if (!page) return null;
+      const target = page.content.find((habit) => habit.id === id);
+      if (!target || target.faitAujourdhui) return null;
+
+      const optimisticHabit: Habit = {
+        ...target,
+        faitAujourdhui: true,
+        streakCourant: target.streakCourant + 1,
+        meilleurStreak: Math.max(target.meilleurStreak, target.streakCourant + 1),
+        completions: [...target.completions, toIsoDate(new Date())],
+      };
+      const optimisticPage: PageResponse<Habit> = {
+        ...page,
+        content: page.content.map((habit) => (habit.id === id ? optimisticHabit : habit)),
+      };
+
+      return runOptimistic(page, setPage, optimisticPage, async () => {
+        const updated = await habitService.checkHabit(id);
+        setPage((current) =>
+          current
+            ? { ...current, content: current.content.map((habit) => (habit.id === id ? updated : habit)) }
+            : current,
+        );
+      });
+    },
+    [page],
+  );
+
+  return { habits: page?.content ?? [], isLoading, error, refetch, toggleHabit };
 };

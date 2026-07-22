@@ -1,10 +1,12 @@
 import type { ButtonHTMLAttributes, FC, ReactNode } from 'react';
+import { Spinner } from '@/components/ui/Spinner';
 
 type ButtonVariant = 'primary' | 'secondary' | 'ghost';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   fullWidth?: boolean;
+  isLoading?: boolean;
   children: ReactNode;
 }
 
@@ -20,7 +22,9 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
 export const Button: FC<ButtonProps> = ({
   variant = 'primary',
   fullWidth = false,
+  isLoading = false,
   className = '',
+  disabled,
   children,
   ...rest
 }) => {
@@ -35,7 +39,8 @@ export const Button: FC<ButtonProps> = ({
     .join(' ');
 
   return (
-    <button className={classes} {...rest}>
+    <button className={classes} disabled={disabled || isLoading} {...rest}>
+      {isLoading && <Spinner size="sm" />}
       {children}
     </button>
   );

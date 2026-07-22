@@ -53,10 +53,10 @@ export const AvatarUpload: FC = () => {
         <Button
           type="button"
           variant="secondary"
-          disabled={isUploading}
+          isLoading={isUploading}
           onClick={() => inputRef.current?.click()}
         >
-          {isUploading ? 'Envoi...' : 'Choisir une photo'}
+          Choisir une photo
         </Button>
         <p className="text-[12px] text-text-faint">PNG ou JPEG, 2 Mo max.</p>
         {error && <p className="text-[12px] text-danger">{error}</p>}

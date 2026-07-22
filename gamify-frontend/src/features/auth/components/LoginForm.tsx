@@ -39,8 +39,8 @@ export const LoginForm: FC<LoginFormProps> = ({ onSubmit, isLoading }) => {
         onChange={(event) => setPassword(event.target.value)}
       />
 
-      <Button type="submit" fullWidth disabled={isLoading}>
-        {isLoading ? 'Connexion...' : 'Se connecter'}
+      <Button type="submit" fullWidth isLoading={isLoading}>
+        Se connecter
       </Button>
     </form>
   );
