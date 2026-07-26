@@ -75,17 +75,28 @@ public class HabitService {
 
     @Transactional
     public HabitResponse check(String email, Long habitId) {
+        return checkDate(email, habitId, LocalDate.now());
+    }
+
+    /**
+     * Coche une date arbitraire (pas seulement aujourd'hui — utilisé par le
+     * calendrier mensuel de la modale de détail), le futur restant interdit.
+     */
+    @Transactional
+    public HabitResponse checkDate(String email, Long habitId, LocalDate date) {
         User user = findUserByEmail(email);
         Habit habit = findOwnedHabit(habitId, user);
-        LocalDate today = LocalDate.now();
 
-        if (completionRepository.existsByHabitIdAndDateCompletionAndAnnuleFalse(habitId, today)) {
-            throw new ConflictException("Cette habitude est déjà cochée aujourd'hui");
+        if (date.isAfter(LocalDate.now())) {
+            throw new DomainException("Impossible de cocher une date future");
+        }
+        if (completionRepository.existsByHabitIdAndDateCompletionAndAnnuleFalse(habitId, date)) {
+            throw new ConflictException("Cette habitude est déjà cochée pour cette date");
         }
 
         HabitCompletion completion = new HabitCompletion();
         completion.setHabit(habit);
-        completion.setDateCompletion(today);
+        completion.setDateCompletion(date);
         completionRepository.save(completion);
 
         int xpAvant = user.getXpTotal();
@@ -93,7 +104,7 @@ public class HabitService {
         user.ajouterXp(habit.getXpRecompense());
         saveProgressionLog(user, xpAvant, 1, habit.getNom(), habit.getAttributCible().name());
 
-        int streak = computeCurrentStreak(habitId, today);
+        int streak = computeCurrentStreak(habitId, date);
         boolean bonus = streak > 0 && streak % 7 == 0;
         if (bonus) {
             int xpAvantBonus = user.getXpTotal();
@@ -108,8 +119,8 @@ public class HabitService {
         }
         userRepository.save(user);
 
-        log.info("Habitude '{}' cochée par {} (+1 {}, +{} XP{}, streak {})",
-                habit.getNom(), email, habit.getAttributCible(), habit.getXpRecompense(),
+        log.info("Habitude '{}' cochée par {} pour {} (+1 {}, +{} XP{}, streak {})",
+                habit.getNom(), email, date, habit.getAttributCible(), habit.getXpRecompense(),
                 bonus ? " +" + STREAK_BONUS_XP + " bonus série" : "", streak);
         return toResponse(habit);
     }

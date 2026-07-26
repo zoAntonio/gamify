@@ -6,15 +6,18 @@ import { Skeleton } from '@/components/ui/Skeleton';
 import { useHabits } from '@/features/habits/hooks/useHabits';
 import { habitService } from '@/features/habits/services/habitService';
 import { HabitCard } from '@/features/habits/components/HabitCard';
+import { HabitDetailModal } from '@/features/habits/components/HabitDetailModal';
 import { HabitForm } from '@/features/habits/components/HabitForm';
 import type { HabitRequest } from '@/features/habits/types/habit.types';
 
 export const HabitsPage: FC = () => {
-  const { habits, isLoading, error, refetch, toggleHabit, cancelDay } = useHabits();
+  const { habits, isLoading, error, refetch, toggleHabit, cancelDay, checkDay } = useHabits();
   const [isModalOpen, setModalOpen] = useState(false);
   const [isCreating, setCreating] = useState(false);
   const [checkingId, setCheckingId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [detailHabitId, setDetailHabitId] = useState<number | null>(null);
+  const detailHabit = habits.find((habit) => habit.id === detailHabitId) ?? null;
 
   const handleCreate = async (request: HabitRequest) => {
     setCreating(true);
@@ -41,6 +44,14 @@ export const HabitsPage: FC = () => {
   const handleCancelDay = async (id: number, date: string) => {
     setActionError(null);
     const error = await cancelDay(id, date);
+    if (error) setActionError(error.message);
+  };
+
+  const handleToggleDate = async (id: number, date: string) => {
+    const habit = habits.find((item) => item.id === id);
+    if (!habit) return;
+    setActionError(null);
+    const error = habit.completions.includes(date) ? await cancelDay(id, date) : await checkDay(id, date);
     if (error) setActionError(error.message);
   };
 
@@ -85,6 +96,7 @@ export const HabitsPage: FC = () => {
               habit={habit}
               onCheck={handleCheck}
               onCancelDay={handleCancelDay}
+              onOpenDetail={setDetailHabitId}
               isChecking={checkingId === habit.id}
             />
           ))}
@@ -95,6 +107,15 @@ export const HabitsPage: FC = () => {
         {actionError && <p className="mb-3 text-[14px] text-danger">{actionError}</p>}
         <HabitForm onSubmit={handleCreate} isSubmitting={isCreating} />
       </Modal>
+
+      {detailHabit && (
+        <HabitDetailModal
+          habit={detailHabit}
+          isOpen
+          onClose={() => setDetailHabitId(null)}
+          onToggleDate={handleToggleDate}
+        />
+      )}
     </section>
   );
 };

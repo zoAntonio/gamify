@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { habitService } from '@/features/habits/services/habitService';
+import { toIsoDate } from '@/features/habits/utils/date';
 import { runOptimistic } from '@/utils/optimistic';
 import type { Habit, PageResponse } from '@/features/habits/types/habit.types';
 
@@ -10,14 +11,8 @@ interface UseHabitsReturn {
   refetch: () => void;
   toggleHabit: (id: number) => Promise<Error | null>;
   cancelDay: (id: number, date: string) => Promise<Error | null>;
+  checkDay: (id: number, date: string) => Promise<Error | null>;
 }
-
-const toIsoDate = (date: Date): string => {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
-};
 
 export const useHabits = (): UseHabitsReturn => {
   const [page, setPage] = useState<PageResponse<Habit> | null>(null);
@@ -109,5 +104,35 @@ export const useHabits = (): UseHabitsReturn => {
     [page],
   );
 
-  return { habits: page?.content ?? [], isLoading, error, refetch, toggleHabit, cancelDay };
+  // Optimiste : ajoute la date à completions (streak/record recalculés côté
+  // serveur pour un jour arbitraire, pas devinables ici — même limite que cancelDay).
+  const checkDay = useCallback(
+    async (id: number, date: string): Promise<Error | null> => {
+      if (!page) return null;
+      const target = page.content.find((habit) => habit.id === id);
+      if (!target || target.completions.includes(date)) return null;
+
+      const optimisticHabit: Habit = {
+        ...target,
+        faitAujourdhui: date === toIsoDate(new Date()) ? true : target.faitAujourdhui,
+        completions: [...target.completions, date],
+      };
+      const optimisticPage: PageResponse<Habit> = {
+        ...page,
+        content: page.content.map((habit) => (habit.id === id ? optimisticHabit : habit)),
+      };
+
+      return runOptimistic(page, setPage, optimisticPage, async () => {
+        const updated = await habitService.checkHabitDay(id, date);
+        setPage((current) =>
+          current
+            ? { ...current, content: current.content.map((habit) => (habit.id === id ? updated : habit)) }
+            : current,
+        );
+      });
+    },
+    [page],
+  );
+
+  return { habits: page?.content ?? [], isLoading, error, refetch, toggleHabit, cancelDay, checkDay };
 };

@@ -73,6 +73,20 @@ public class HabitController {
         );
     }
 
+    @Operation(summary = "Cocher une date donnée", description = "Marque l'habitude comme faite à une date arbitraire (passée ou aujourd'hui, jamais future) : mêmes règles que le check quotidien. Utilisé par le calendrier mensuel de la modale de détail.")
+    @PostMapping("/{id}/completions/{date}")
+    public ApiResponse<HabitResponse> checkDate(
+            Authentication authentication,
+            @Parameter(description = "Identifiant de l'habitude") @PathVariable Long id,
+            @Parameter(description = "Date à cocher (ISO-8601)")
+            @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        return ApiResponse.success(
+                habitService.checkDate(authentication.getName(), id, date),
+                "Habitude cochée"
+        );
+    }
+
     @Operation(summary = "Annuler une complétion", description = "Annule (logiquement) la complétion d'une date donnée : reprend l'XP/attribut gagnés et recalcule honnêtement le record de série.")
     @DeleteMapping("/{id}/completions/{date}")
     public ApiResponse<HabitResponse> cancel(

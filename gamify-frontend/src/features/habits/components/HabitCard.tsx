@@ -6,12 +6,13 @@ interface HabitCardProps {
   habit: Habit;
   onCheck: (id: number) => void;
   onCancelDay: (id: number, date: string) => void;
+  onOpenDetail: (id: number) => void;
   isChecking: boolean;
 }
 
 const FALLBACK_COLOR = '#663af3'; // Void Violet — si l'habitude n'a pas de couleur
 
-export const HabitCard: FC<HabitCardProps> = ({ habit, onCheck, onCancelDay, isChecking }) => {
+export const HabitCard: FC<HabitCardProps> = ({ habit, onCheck, onCancelDay, onOpenDetail, isChecking }) => {
   const couleur = habit.couleur ?? FALLBACK_COLOR;
 
   return (
@@ -25,7 +26,13 @@ export const HabitCard: FC<HabitCardProps> = ({ habit, onCheck, onCancelDay, isC
         </span>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[14px] font-medium text-text">{habit.nom}</p>
+          <button
+            type="button"
+            onClick={() => onOpenDetail(habit.id)}
+            className="block w-full truncate text-left text-[14px] font-medium text-text underline-offset-2 hover:underline"
+          >
+            {habit.nom}
+          </button>
           <p className="truncate text-[11px] text-text-faint">
             {habit.domaineNom ?? 'Domaine supprimé'} · {habit.attributCible} · 🔥{' '}
             {habit.streakCourant} j (record {habit.meilleurStreak})

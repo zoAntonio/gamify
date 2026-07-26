@@ -27,7 +27,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G1-T06 | 🔶 Partiel | 2026-07-17 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Pas encore de vue régressions en rouge (aucune perte n'existe tant que G1-T04 n'a pas les malus). |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
 | G1-T10 | 🔶 Partiel | 2026-07-17 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. Pas encore de récurrence ni resize par poignée. |
-| G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé. Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check du jour refusé (409). **Annulation** d'une complétion (n'importe quel jour, double-clic sur le carré) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
+| G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
 | G1-T09 | 🔶 Partiel | 2026-07-17 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`, hauteur bornée + scroll interne pour le paysage mobile). Responsive : rail horizontal à snap (une colonne ≈ 85% de l'écran) sous `md`, grille 3 colonnes au-dessus ; `viewport-fit=cover` ajouté pour les écrans à encoche. Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). Toujours **pas d'UI de filtres/tri** ni de ratio réalisé/objectif. |
 
 **Écarts/dette introduits par G0-T01/G0-T02, notés consciemment plutôt que masqués :**
@@ -142,6 +142,34 @@ qu'un ticket passe la checklist de validation — pas avant.
 - Toujours aucun test automatisé (le recalcul de `meilleurStreak` après
   annulation serait un bon candidat JUnit, vu sa sensibilité aux erreurs
   d'aléas de dates).
+
+**Écarts/dette introduits par la modale calendrier G1-T11 (2026-07-26) :**
+- `HabitService.check(email, habitId)` généralisé en `checkDate(email, habitId, date)`
+  (l'ancien `check` délègue à `checkDate(..., LocalDate.now())`, comportement du
+  bouton ✓ de la carte inchangé) pour permettre de cocher n'importe quel jour
+  passé depuis le calendrier de la modale de détail — nouvel endpoint
+  `POST /api/habits/{id}/completions/{date}`, symétrique du `DELETE` d'annulation
+  déjà en place. Garde-fou : date future refusée (400).
+- Backend vérifié par HTTP réel (compte jetable) : check sur une date passée
+  (2026-07-20) → 200, `completions` à jour ; même date une 2e fois → 409 "déjà
+  cochée pour cette date" ; date future (2026-12-31) → 400.
+- Modale construite sur le `Modal` générique existant + calendrier mensuel
+  réimplémentant volontairement le pattern de
+  `features/agenda/components/MonthView.tsx` (grille 42 cellules, lundi en
+  premier) plutôt que de l'importer depuis `agenda/` — indépendance des
+  features (même choix que la duplication de l'appel `/api/domaines` dans
+  `habitService.ts`). Un `features/habits/utils/date.ts` a été créé pour
+  mutualiser `toIsoDate` (jusque-là dupliqué dans `HabitGrid.tsx` et
+  `useHabits.ts`) et les nouveaux utilitaires de calendrier.
+- Périmètre volontairement réduit par rapport à la référence HabitKit
+  (capture utilisateur) : pas d'objectif chiffré, pas de compteur
+  d'hydratation, pas d'édition/réglages depuis la modale — juste le calendrier
+  et cocher/annuler, décision utilisateur explicite.
+- Frontend : `tsc`/`oxlint` propres, parcours navigateur (ouverture au clic sur
+  le nom, navigation mois précédent/suivant, clic pour cocher/décocher une
+  date) **pas vérifié dans un navigateur réel** — même limite d'environnement
+  que le reste de la feature habitudes, à tester manuellement par
+  l'utilisateur.
 
 ## Dette technique connue
 

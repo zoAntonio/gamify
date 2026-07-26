@@ -21,4 +21,7 @@ export const habitService = {
 
   cancelHabitDay: (id: number, date: string): Promise<Habit> =>
     apiClient.delete<Habit>(`/habits/${id}/completions/${date}`),
+
+  checkHabitDay: (id: number, date: string): Promise<Habit> =>
+    apiClient.post<Habit>(`/habits/${id}/completions/${date}`),
 };
