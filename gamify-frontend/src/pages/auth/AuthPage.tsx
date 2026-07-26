@@ -82,13 +82,13 @@ export const AuthPage: FC = () => {
           </h1>
         </div>
 
-        <div className="flex gap-0.5 rounded-full bg-surface-2 p-1">
+        <div className="flex gap-0.5 rounded-control bg-surface-2 p-1">
           <button
             type="button"
             onClick={() => setMode('login')}
             disabled={mode === 'login'}
             className={[
-              'flex-1 rounded-full py-1 text-[13px] font-medium transition-colors',
+              'flex-1 rounded-control py-1 text-[13px] font-medium transition-colors',
               mode === 'login' ? 'bg-surface-3 text-white shadow-subtle' : 'text-text-muted',
             ].join(' ')}
           >
@@ -99,7 +99,7 @@ export const AuthPage: FC = () => {
             onClick={() => setMode('register')}
             disabled={mode === 'register'}
             className={[
-              'flex-1 rounded-full py-1 text-[13px] font-medium transition-colors',
+              'flex-1 rounded-control py-1 text-[13px] font-medium transition-colors',
               mode === 'register' ? 'bg-surface-3 text-white shadow-subtle' : 'text-text-muted',
             ].join(' ')}
           >

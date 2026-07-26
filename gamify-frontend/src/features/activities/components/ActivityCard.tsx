@@ -67,7 +67,7 @@ export const ActivityCard: FC<ActivityCardProps> = ({ activity, onChangeStatut, 
           type="button"
           variant="secondary"
           className="!px-3 !py-1.5 text-[12px]"
-          disabled={isUpdating}
+          isLoading={isUpdating}
           onClick={() => onChangeStatut(activity.id, 'EN_COURS')}
         >
           Commencer
@@ -78,7 +78,7 @@ export const ActivityCard: FC<ActivityCardProps> = ({ activity, onChangeStatut, 
         <Button
           type="button"
           className="!px-3 !py-1.5 text-[12px]"
-          disabled={isUpdating}
+          isLoading={isUpdating}
           onClick={() => onChangeStatut(activity.id, 'TERMINE')}
         >
           Valider

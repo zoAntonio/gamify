@@ -7,6 +7,8 @@ import { AvatarPicker } from '@/features/profile/components/AvatarPicker';
 import { AvatarUpload } from '@/features/profile/components/AvatarUpload';
 import { DomainSelector } from '@/features/profile/components/DomainSelector';
 import { Button } from '@/components/ui/Button';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Spinner } from '@/components/ui/Spinner';
 import type { Attribut, Avatar } from '@/features/profile/types/profile.types';
 
 export const OnboardingPage: FC = () => {
@@ -56,7 +58,15 @@ export const OnboardingPage: FC = () => {
     }
   };
 
-  if (isLoading) return <p className="text-sm text-text-muted">Chargement des domaines...</p>;
+  if (isLoading) {
+    return (
+      <p className="flex items-center gap-2 text-sm text-text-muted">
+        <Spinner size="sm" /> Chargement des domaines...
+      </p>
+    );
+  }
+
+  const completedSteps = (avatar ? 1 : 0) + (selectedIds.length > 0 ? 1 : 0);
 
   return (
     <section className="flex max-w-2xl flex-col gap-8">
@@ -67,6 +77,12 @@ export const OnboardingPage: FC = () => {
         <p className="mt-1 text-[15px] text-text-muted">
           Choisis ton avatar et les domaines que tu veux suivre.
         </p>
+        <ProgressBar
+          value={completedSteps}
+          max={2}
+          label="Profil complété"
+          className="mt-4"
+        />
       </div>
 
       <div className="flex flex-col gap-3">
@@ -95,8 +111,8 @@ export const OnboardingPage: FC = () => {
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <Button type="button" onClick={handleSave} disabled={isSaving}>
-        {isSaving ? 'Enregistrement...' : 'Valider mon profil'}
+      <Button type="button" onClick={handleSave} isLoading={isSaving}>
+        Valider mon profil
       </Button>
     </section>
   );

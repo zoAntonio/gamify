@@ -3,6 +3,7 @@ import type { FC, FormEvent } from 'react';
 import { TextField } from '@/components/ui/TextField';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { Spinner } from '@/components/ui/Spinner';
 import { useActivityDomaines } from '@/features/activities/hooks/useActivityDomaines';
 import type { Attribut } from '@/types/attribut.types';
 import type { ActivityRequest, Frequence } from '@/features/activities/types/activity.types';
@@ -55,7 +56,13 @@ export const ActivityForm: FC<ActivityFormProps> = ({ onSubmit, isSubmitting }) 
     setObjectif('');
   };
 
-  if (isLoadingDomaines) return <p className="text-[15px] text-text-muted">Chargement des domaines...</p>;
+  if (isLoadingDomaines) {
+    return (
+      <p className="flex items-center gap-2 text-[15px] text-text-muted">
+        <Spinner size="sm" /> Chargement des domaines...
+      </p>
+    );
+  }
 
   return (
     <form className="flex flex-col gap-3" onSubmit={handleSubmit}>
@@ -125,8 +132,8 @@ export const ActivityForm: FC<ActivityFormProps> = ({ onSubmit, isSubmitting }) 
         onChange={(event) => setObjectif(event.target.value)}
       />
 
-      <Button type="submit" disabled={isSubmitting || !domaineId || !attributCible}>
-        {isSubmitting ? 'Création...' : 'Ajouter la tâche'}
+      <Button type="submit" isLoading={isSubmitting} disabled={!domaineId || !attributCible}>
+        Ajouter la tâche
       </Button>
     </form>
   );

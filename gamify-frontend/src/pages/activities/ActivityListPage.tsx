@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { FC } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { Skeleton } from '@/components/ui/Skeleton';
 import { useActivities } from '@/features/activities/hooks/useActivities';
 import { activityService } from '@/features/activities/services/activityService';
 import { ActivityForm } from '@/features/activities/components/ActivityForm';
@@ -16,7 +17,7 @@ const COLUMNS: { statut: StatutKanban; title: string }[] = [
 ];
 
 export const ActivityListPage: FC = () => {
-  const { activities, isLoading, error, refetch } = useActivities();
+  const { activities, isLoading, error, refetch, changerStatutOptimistic } = useActivities();
   const [isModalOpen, setModalOpen] = useState(false);
   const [isCreating, setCreating] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -42,14 +43,9 @@ export const ActivityListPage: FC = () => {
 
     setUpdatingId(id);
     setActionError(null);
-    try {
-      await activityService.changerStatut(id, statut);
-      refetch();
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : 'Erreur inconnue');
-    } finally {
-      setUpdatingId(null);
-    }
+    const error = await changerStatutOptimistic(id, statut);
+    if (error) setActionError(error.message);
+    setUpdatingId(null);
   };
 
   return (
@@ -67,8 +63,18 @@ export const ActivityListPage: FC = () => {
       </div>
 
       {actionError && !isModalOpen && <p className="text-[15px] text-danger">{actionError}</p>}
-      {isLoading && <p className="text-[15px] text-text-muted">Chargement des tâches...</p>}
       {error && <p className="text-[15px] text-danger">{error.message}</p>}
+
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+          {COLUMNS.map((column) => (
+            <div key={column.statut} className="flex flex-col gap-3">
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ))}
+        </div>
+      )}
 
       {!isLoading && !error && (
         <div className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0 md:pb-0">

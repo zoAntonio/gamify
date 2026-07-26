@@ -59,7 +59,7 @@ export const ProgressionChart: FC<ProgressionChartProps> = ({
               aria-pressed={periode === item.value}
               onClick={() => onPeriodeChange(item.value)}
               className={[
-                'rounded-[8px] px-3 py-1 text-[12px] font-medium transition-colors',
+                'rounded-control px-3 py-1 text-[12px] font-medium transition-colors',
                 periode === item.value ? 'bg-accent text-white' : 'text-text-muted hover:text-text',
               ].join(' ')}
             >

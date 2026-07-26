@@ -84,6 +84,21 @@ public class User extends BaseEntity {
         }
     }
 
+    /**
+     * Retrait symétrique de {@link #appliquerGainAttribut} : correction d'un gain
+     * annulé (ex. complétion d'habitude décochée), jamais un malus punitif.
+     */
+    public void retirerGainAttribut(Attribut attribut) {
+        switch (attribut) {
+            case INT -> intelligence--;
+            case FOR -> force--;
+            case VIT -> vitalite--;
+            case PRE -> precision--;
+            case CHA -> charisme--;
+            case RES -> resistance--;
+        }
+    }
+
     public int getValeurAttribut(Attribut attribut) {
         return switch (attribut) {
             case INT -> intelligence;
@@ -106,6 +121,15 @@ public class User extends BaseEntity {
             niveau++;
         }
         titre = TITRES[Math.min(niveau - 1, TITRES.length - 1)];
+    }
+
+    /**
+     * Retrait symétrique de {@link #ajouterXp} : correction d'un gain annulé. Ne
+     * touche jamais niveau/titre à la baisse (règle domain.md : le niveau ne
+     * baisse jamais), seul xpTotal recule.
+     */
+    public void retirerXp(int xp) {
+        xpTotal -= xp;
     }
 
     /** XP cumulés requis pour atteindre le niveau donné (plafonné pour éviter tout débordement). */

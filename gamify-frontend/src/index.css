@@ -2,8 +2,8 @@
 
 /*
  * Thème "Frosted glass cathedral at midnight" — voir DESIGN.md à la racine du repo.
- * Untitled Sans / aeonikPro / dotDigital ne sont pas des polices distribuables ;
- * on utilise les substituts recommandés par la référence (Inter / Space Grotesk / JetBrains Mono).
+ * Palette de couleurs inchangée ; police + rayons de bordure alignés sur GitHub Primer
+ * (pile système GitHub, rayons 3/6/12px) à la demande utilisateur du 2026-07-26.
  */
 @theme {
   --color-bg: #05060f; /* Midnight Canvas */
@@ -32,10 +32,11 @@
   --color-cha: #ff5c8a;
   --color-res: #45c2d6;
 
-  --radius-card: 1rem; /* 16px — cartes, modales */
-  --radius-control: 0.625rem; /* 10px — chrome des contrôles (nav, boutons icône) */
-  --radius-input: 0.375rem; /* 6px — champs, badges, CTA violet */
-  --radius-icon: 9999px; /* conteneurs d'icônes circulaires */
+  --radius-card: 0.75rem; /* 12px — GitHub Primer "large" : modales/dialogs */
+  --radius-control: 0.375rem; /* 6px — GitHub Primer "medium" : chrome des contrôles (nav, boutons icône, box) */
+  --radius-input: 0.375rem; /* 6px — GitHub Primer "medium" : champs, badges, boutons */
+  --radius-small: 0.1875rem; /* 3px — GitHub Primer "small" : puces/labels compacts */
+  --radius-icon: 9999px; /* conteneurs d'icônes circulaires (avatars GitHub) */
 
   --shadow-glass: inset 0 1px 1px rgba(199, 211, 234, 0.12), inset 0 24px 48px rgba(199, 211, 234, 0.05),
     0 24px 32px rgba(6, 6, 14, 0.7);
@@ -44,10 +45,13 @@
   --shadow-subtle: rgba(186, 215, 247, 0.12) 0px 0px 0px 1px inset; /* hairline givré universel */
   --shadow-subtle-focus: rgba(186, 215, 247, 0.24) 0px 0px 0px 1px inset;
 
+  /* Police + rayons calqués sur GitHub Primer (forme uniquement, palette de couleurs inchangée) */
   --font-sans:
-    'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-display: 'Space Grotesk', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif,
+    'Apple Color Emoji', 'Segoe UI Emoji';
+  --font-display: var(--font-sans);
+  --font-mono:
+    ui-monospace, 'SFMono-Regular', 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
 }
 
 html {

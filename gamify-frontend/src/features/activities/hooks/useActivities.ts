@@ -1,12 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { activityService } from '@/features/activities/services/activityService';
-import type { Activity, PageResponse } from '@/features/activities/types/activity.types';
+import { runOptimistic } from '@/utils/optimistic';
+import type { Activity, PageResponse, StatutKanban } from '@/features/activities/types/activity.types';
 
 interface UseActivitiesReturn {
   activities: Activity[];
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
+  changerStatutOptimistic: (id: number, statut: StatutKanban) => Promise<Error | null>;
 }
 
 export const useActivities = (): UseActivitiesReturn => {
@@ -39,5 +41,29 @@ export const useActivities = (): UseActivitiesReturn => {
     };
   }, [refetchToken]);
 
-  return { activities: page?.content ?? [], isLoading, error, refetch };
+  // Optimistic UI : la carte saute de colonne immédiatement, rollback si l'appel échoue.
+  const changerStatutOptimistic = useCallback(
+    async (id: number, statut: StatutKanban): Promise<Error | null> => {
+      if (!page) return null;
+      const target = page.content.find((activity) => activity.id === id);
+      if (!target || target.statut === statut) return null;
+
+      const optimisticPage: PageResponse<Activity> = {
+        ...page,
+        content: page.content.map((activity) => (activity.id === id ? { ...activity, statut } : activity)),
+      };
+
+      return runOptimistic(page, setPage, optimisticPage, async () => {
+        const updated = await activityService.changerStatut(id, statut);
+        setPage((current) =>
+          current
+            ? { ...current, content: current.content.map((activity) => (activity.id === id ? updated : activity)) }
+            : current,
+        );
+      });
+    },
+    [page],
+  );
+
+  return { activities: page?.content ?? [], isLoading, error, refetch, changerStatutOptimistic };
 };

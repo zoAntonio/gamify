@@ -50,8 +50,8 @@ export const RegisterForm: FC<RegisterFormProps> = ({ onSubmit, isLoading }) => 
         onChange={(event) => setPassword(event.target.value)}
       />
 
-      <Button type="submit" fullWidth disabled={isLoading}>
-        {isLoading ? 'Création...' : 'Créer mon compte'}
+      <Button type="submit" fullWidth isLoading={isLoading}>
+        Créer mon compte
       </Button>
     </form>
   );
