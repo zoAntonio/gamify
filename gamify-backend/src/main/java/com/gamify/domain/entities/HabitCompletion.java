@@ -9,7 +9,6 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -18,16 +17,12 @@ import java.time.LocalDate;
 /**
  * Log append-only : n'hérite pas de BaseEntity (même patron que ProgressionLog),
  * une série cassée conserve l'historique — on n'efface jamais les données passées
- * (domain.md).
+ * (domain.md). L'unicité (habit_id, date_completion) n'est portée que sur les
+ * lignes actives via un index unique partiel (V9) — non exprimable en
+ * `@UniqueConstraint` JPA, donc absente de cette classe.
  */
 @Entity
-@Table(
-        name = "habit_completions",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uq_habit_completions_habit_date",
-                columnNames = {"habit_id", "date_completion"}
-        )
-)
+@Table(name = "habit_completions")
 @Data
 @NoArgsConstructor
 public class HabitCompletion {

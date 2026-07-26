@@ -10,7 +10,7 @@ import { HabitForm } from '@/features/habits/components/HabitForm';
 import type { HabitRequest } from '@/features/habits/types/habit.types';
 
 export const HabitsPage: FC = () => {
-  const { habits, isLoading, error, refetch, toggleHabit } = useHabits();
+  const { habits, isLoading, error, refetch, toggleHabit, cancelDay } = useHabits();
   const [isModalOpen, setModalOpen] = useState(false);
   const [isCreating, setCreating] = useState(false);
   const [checkingId, setCheckingId] = useState<number | null>(null);
@@ -36,6 +36,12 @@ export const HabitsPage: FC = () => {
     const error = await toggleHabit(id);
     if (error) setActionError(error.message);
     setCheckingId(null);
+  };
+
+  const handleCancelDay = async (id: number, date: string) => {
+    setActionError(null);
+    const error = await cancelDay(id, date);
+    if (error) setActionError(error.message);
   };
 
   return (
@@ -78,6 +84,7 @@ export const HabitsPage: FC = () => {
               key={habit.id}
               habit={habit}
               onCheck={handleCheck}
+              onCancelDay={handleCancelDay}
               isChecking={checkingId === habit.id}
             />
           ))}

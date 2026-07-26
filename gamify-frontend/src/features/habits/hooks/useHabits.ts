@@ -9,6 +9,7 @@ interface UseHabitsReturn {
   error: Error | null;
   refetch: () => void;
   toggleHabit: (id: number) => Promise<Error | null>;
+  cancelDay: (id: number, date: string) => Promise<Error | null>;
 }
 
 const toIsoDate = (date: Date): string => {
@@ -78,5 +79,35 @@ export const useHabits = (): UseHabitsReturn => {
     [page],
   );
 
-  return { habits: page?.content ?? [], isLoading, error, refetch, toggleHabit };
+  // Optimiste : ne fait disparaître que le carré de la grille (streak/record
+  // recalculés côté serveur pour un jour arbitraire, pas devinables ici).
+  const cancelDay = useCallback(
+    async (id: number, date: string): Promise<Error | null> => {
+      if (!page) return null;
+      const target = page.content.find((habit) => habit.id === id);
+      if (!target) return null;
+
+      const optimisticHabit: Habit = {
+        ...target,
+        faitAujourdhui: date === toIsoDate(new Date()) ? false : target.faitAujourdhui,
+        completions: target.completions.filter((iso) => iso !== date),
+      };
+      const optimisticPage: PageResponse<Habit> = {
+        ...page,
+        content: page.content.map((habit) => (habit.id === id ? optimisticHabit : habit)),
+      };
+
+      return runOptimistic(page, setPage, optimisticPage, async () => {
+        const updated = await habitService.cancelHabitDay(id, date);
+        setPage((current) =>
+          current
+            ? { ...current, content: current.content.map((habit) => (habit.id === id ? updated : habit)) }
+            : current,
+        );
+      });
+    },
+    [page],
+  );
+
+  return { habits: page?.content ?? [], isLoading, error, refetch, toggleHabit, cancelDay };
 };

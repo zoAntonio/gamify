@@ -27,7 +27,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G1-T06 | 🔶 Partiel | 2026-07-17 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Pas encore de vue régressions en rouge (aucune perte n'existe tant que G1-T04 n'a pas les malus). |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
 | G1-T10 | 🔶 Partiel | 2026-07-17 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. Pas encore de récurrence ni resize par poignée. |
-| G1-T11 | 🔶 Partiel | 2026-07-17 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours), streak courant + record personnel séparé (`Habit.meilleurStreak`). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check du jour refusé (409). Reste : notifications (G1-T12), décocher, éditer/supprimer une habitude. |
+| G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé. Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check du jour refusé (409). **Annulation** d'une complétion (n'importe quel jour, double-clic sur le carré) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
 | G1-T09 | 🔶 Partiel | 2026-07-17 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`, hauteur bornée + scroll interne pour le paysage mobile). Responsive : rail horizontal à snap (une colonne ≈ 85% de l'écran) sous `md`, grille 3 colonnes au-dessus ; `viewport-fit=cover` ajouté pour les écrans à encoche. Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). Toujours **pas d'UI de filtres/tri** ni de ratio réalisé/objectif. |
 
 **Écarts/dette introduits par G0-T01/G0-T02, notés consciemment plutôt que masqués :**
@@ -87,8 +87,9 @@ qu'un ticket passe la checklist de validation — pas avant.
 - `/api/profile` n'expose pas les attributs RPG (seulement XP/niveau) — le
   feedback "+1 INT" ne peut pas être affiché précisément côté UI tant que le
   DTO profil ne les renvoie pas (à traiter avec G1-T04/G1-T06).
-- Habitudes : pas de décocher (le gain est déjà appliqué — choix assumé), pas
-  d'édition/suppression (suppression = action destructive à confirmer, v2).
+- Habitudes : décocher est maintenant possible (voir écarts du 2026-07-26
+  ci-dessous) ; pas d'édition/suppression de l'habitude elle-même (suppression =
+  action destructive à confirmer, v2).
 - Agenda : pas de récurrence, pas de resize par poignée, drag 1h de granularité,
   chevauchement d'événements non géré visuellement (ils se superposent).
 - Toujours aucun test automatisé (le calcul de streak de `HabitService` serait
@@ -114,6 +115,33 @@ qu'un ticket passe la checklist de validation — pas avant.
   d'environnement Vite avant tout déploiement.
 - Toujours aucun test automatisé (`User.ajouterXp`/seuils et l'agrégation
   `StatsService` seraient les premiers bons candidats).
+
+**Écarts/dette introduits par l'annulation de complétion G1-T11 (2026-07-26) :**
+- Tension de domaine tranchée avec l'utilisateur : `HabitCompletion` était
+  documenté append-only ("on n'efface jamais les données passées"). Décocher est
+  donc une **annulation logique** (`annule`/`bonus_applique` ajoutés en V8, index
+  unique déplacé sur les lignes actives en V9 — la contrainte V6 bloquait le
+  re-check du même jour après une annulation, corrigé avant de livrer), jamais un
+  `DELETE` physique. L'XP/attribut gagnés sont repris symétriquement
+  (`User.retirerXp`/`retirerGainAttribut`), et `meilleurStreak` est recalculé sur
+  tout l'historique actif restant (peut baisser) — décisions utilisateur
+  explicites, à ne pas reconsidérer sans repasser par lui.
+- Backend vérifié par HTTP réel (compte jetable) : check → annulation → re-check
+  → annulation, `faitAujourdhui`/`streakCourant`/`completions` reviennent bien en
+  arrière à chaque fois, `/api/stats/journal` montre les deux entrées correctives
+  (+1 puis −1, jamais de ligne supprimée) ; annuler une date jamais cochée → 404.
+  Recalcul historique de `meilleurStreak` (`computeMeilleurStreakHistorique`) pas
+  testé sur un historique multi-jours réel faute d'accès `psql` dans cet
+  environnement — logique simple (plus longue suite de dates consécutives) mais
+  à surveiller si un bug de streak est signalé.
+- Frontend : `tsc`/`oxlint` propres, mais parcours navigateur (double-clic pour
+  annuler, tooltip au survol ~700ms, densité de grille/police façon GitHub) **pas
+  vérifié dans un navigateur réel** — pas d'outil d'automatisation ici (même
+  limite d'environnement que les features précédentes), laissé à tester
+  manuellement par l'utilisateur.
+- Toujours aucun test automatisé (le recalcul de `meilleurStreak` après
+  annulation serait un bon candidat JUnit, vu sa sensibilité aux erreurs
+  d'aléas de dates).
 
 ## Dette technique connue
 
