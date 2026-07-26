@@ -79,7 +79,7 @@ public class HabitService {
         Habit habit = findOwnedHabit(habitId, user);
         LocalDate today = LocalDate.now();
 
-        if (completionRepository.existsByHabitIdAndDateCompletion(habitId, today)) {
+        if (completionRepository.existsByHabitIdAndDateCompletionAndAnnuleFalse(habitId, today)) {
             throw new ConflictException("Cette habitude est déjà cochée aujourd'hui");
         }
 
@@ -100,6 +100,8 @@ public class HabitService {
             user.ajouterXp(STREAK_BONUS_XP);
             saveProgressionLog(user, xpAvantBonus, 0, "Bonus série 7 jours — " + habit.getNom(), null);
         }
+        completion.setBonusApplique(bonus);
+        completionRepository.save(completion);
         if (streak > habit.getMeilleurStreak()) {
             habit.setMeilleurStreak(streak);
             habitRepository.save(habit);
@@ -109,6 +111,43 @@ public class HabitService {
         log.info("Habitude '{}' cochée par {} (+1 {}, +{} XP{}, streak {})",
                 habit.getNom(), email, habit.getAttributCible(), habit.getXpRecompense(),
                 bonus ? " +" + STREAK_BONUS_XP + " bonus série" : "", streak);
+        return toResponse(habit);
+    }
+
+    /**
+     * Annule une complétion passée (n'importe quel jour, pas seulement aujourd'hui) :
+     * annulation logique (la ligne n'est jamais supprimée, domain.md), reprise
+     * symétrique de l'XP/attribut gagnés, et recalcul honnête du record de série
+     * (peut baisser) à partir de l'historique complet restant.
+     */
+    @Transactional
+    public HabitResponse annuler(String email, Long habitId, LocalDate date) {
+        User user = findUserByEmail(email);
+        Habit habit = findOwnedHabit(habitId, user);
+
+        HabitCompletion completion = completionRepository
+                .findByHabitIdAndDateCompletionAndAnnuleFalse(habitId, date)
+                .orElseThrow(() -> new NotFoundException("Cette date n'est pas cochée"));
+
+        completion.setAnnule(true);
+        completionRepository.save(completion);
+
+        int xpAvant = user.getXpTotal();
+        user.retirerGainAttribut(habit.getAttributCible());
+        user.retirerXp(habit.getXpRecompense());
+        saveProgressionLog(user, xpAvant, -1, "Annulation — " + habit.getNom(), habit.getAttributCible().name());
+
+        if (completion.isBonusApplique()) {
+            int xpAvantBonus = user.getXpTotal();
+            user.retirerXp(STREAK_BONUS_XP);
+            saveProgressionLog(user, xpAvantBonus, 0, "Annulation bonus série — " + habit.getNom(), null);
+        }
+        userRepository.save(user);
+
+        habit.setMeilleurStreak(computeMeilleurStreakHistorique(habitId));
+        habitRepository.save(habit);
+
+        log.info("Complétion du {} annulée pour l'habitude '{}' par {}", date, habit.getNom(), email);
         return toResponse(habit);
     }
 
@@ -145,7 +184,7 @@ public class HabitService {
      */
     private int computeCurrentStreak(Long habitId, LocalDate today) {
         Set<LocalDate> days = completionRepository
-                .findByHabitIdAndDateCompletionGreaterThanEqualOrderByDateCompletionDesc(
+                .findByHabitIdAndDateCompletionGreaterThanEqualAndAnnuleFalseOrderByDateCompletionDesc(
                         habitId, today.minusDays(STREAK_LOOKBACK_DAYS))
                 .stream()
                 .map(HabitCompletion::getDateCompletion)
@@ -160,10 +199,34 @@ public class HabitService {
         return streak;
     }
 
+    /**
+     * Plus longue série consécutive de jours dans tout l'historique actif
+     * (contrairement à {@link #computeCurrentStreak}, ne se limite pas à une
+     * série se terminant aujourd'hui) — utilisé pour recalculer honnêtement
+     * meilleurStreak après annulation d'une complétion.
+     */
+    private int computeMeilleurStreakHistorique(Long habitId) {
+        List<LocalDate> days = completionRepository
+                .findByHabitIdAndAnnuleFalseOrderByDateCompletionAsc(habitId)
+                .stream()
+                .map(HabitCompletion::getDateCompletion)
+                .toList();
+
+        int meilleur = 0;
+        int courant = 0;
+        LocalDate precedent = null;
+        for (LocalDate jour : days) {
+            courant = (precedent != null && jour.equals(precedent.plusDays(1))) ? courant + 1 : 1;
+            meilleur = Math.max(meilleur, courant);
+            precedent = jour;
+        }
+        return meilleur;
+    }
+
     private HabitResponse toResponse(Habit habit) {
         LocalDate today = LocalDate.now();
         List<LocalDate> completions = completionRepository
-                .findByHabitIdAndDateCompletionGreaterThanEqualOrderByDateCompletionDesc(
+                .findByHabitIdAndDateCompletionGreaterThanEqualAndAnnuleFalseOrderByDateCompletionDesc(
                         habit.getId(), today.minusDays(GRID_DAYS - 1))
                 .stream()
                 .map(HabitCompletion::getDateCompletion)

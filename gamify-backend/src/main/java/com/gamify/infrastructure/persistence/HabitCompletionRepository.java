@@ -5,11 +5,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 public interface HabitCompletionRepository extends JpaRepository<HabitCompletion, Long> {
 
-    boolean existsByHabitIdAndDateCompletion(Long habitId, LocalDate dateCompletion);
+    boolean existsByHabitIdAndDateCompletionAndAnnuleFalse(Long habitId, LocalDate dateCompletion);
 
-    List<HabitCompletion> findByHabitIdAndDateCompletionGreaterThanEqualOrderByDateCompletionDesc(
+    Optional<HabitCompletion> findByHabitIdAndDateCompletionAndAnnuleFalse(Long habitId, LocalDate dateCompletion);
+
+    List<HabitCompletion> findByHabitIdAndDateCompletionGreaterThanEqualAndAnnuleFalseOrderByDateCompletionDesc(
             Long habitId, LocalDate dateCompletion);
+
+    List<HabitCompletion> findByHabitIdAndAnnuleFalseOrderByDateCompletionAsc(Long habitId);
 }

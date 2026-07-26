@@ -42,4 +42,13 @@ public class HabitCompletion {
 
     @Column(name = "date_completion", nullable = false)
     private LocalDate dateCompletion;
+
+    // Annulation logique : la ligne n'est jamais supprimée (append-only), elle est
+    // juste exclue des calculs actifs (streak, grille, faitAujourdhui).
+    private boolean annule = false;
+
+    // Capturé au moment du check : permet de reprendre exactement le bonus de
+    // série lors d'une annulation, sans recalculer tout l'historique des bonus.
+    @Column(name = "bonus_applique")
+    private boolean bonusApplique = false;
 }
