@@ -61,7 +61,7 @@ export const MonthView: FC<MonthViewProps> = ({ currentDate, events, onSelectDay
                 <span
                   key={event.id}
                   className={[
-                    'truncate rounded-[3px] border-l-2 px-1 text-[10px] leading-4',
+                    'truncate rounded-small border-l-2 px-1 text-[10px] leading-4',
                     eventColorClasses(event),
                   ].join(' ')}
                 >

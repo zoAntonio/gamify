@@ -15,8 +15,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary: 'rounded-input bg-accent text-white shadow-subtle active:bg-accent-hover',
   secondary:
-    'rounded-full bg-surface-2 text-white shadow-subtle active:bg-[#bad6f71f]',
-  ghost: 'rounded-full bg-transparent text-text shadow-subtle active:text-accent-hover',
+    'rounded-input bg-surface-2 text-white shadow-subtle active:bg-[#bad6f71f]',
+  ghost: 'rounded-input bg-transparent text-text shadow-subtle active:text-accent-hover',
 };
 
 export const Button: FC<ButtonProps> = ({
@@ -29,7 +29,7 @@ export const Button: FC<ButtonProps> = ({
   ...rest
 }) => {
   const classes = [
-    'inline-flex items-center justify-center gap-2 px-4 py-2.5 text-[14px] font-medium transition-colors',
+    'inline-flex items-center justify-center gap-2 px-4 py-1.5 text-[14px] font-medium transition-colors',
     'disabled:cursor-not-allowed disabled:opacity-40',
     fullWidth ? 'w-full' : '',
     VARIANT_CLASSES[variant],

@@ -7,7 +7,7 @@ export const Skeleton: FC<SkeletonProps> = ({ className = '', ...rest }) => {
   return (
     <div
       aria-hidden="true"
-      className={['animate-pulse rounded-card bg-surface-2', className].filter(Boolean).join(' ')}
+      className={['animate-pulse rounded-control bg-surface-2', className].filter(Boolean).join(' ')}
       {...rest}
     />
   );

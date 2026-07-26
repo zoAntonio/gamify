@@ -17,7 +17,7 @@ export const Select: FC<SelectProps> = ({ label, error, id, className = '', chil
       <select
         id={id}
         className={[
-          'rounded-input bg-input px-3.5 py-2.5 text-[14px] text-text shadow-subtle',
+          'rounded-input bg-input px-3 py-1.5 text-[14px] text-text shadow-subtle',
           'outline-none transition-shadow focus:shadow-subtle-focus focus:ring-2 focus:ring-accent/40',
           error ? 'ring-2 ring-danger/50' : '',
           className,

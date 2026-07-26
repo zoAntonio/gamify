@@ -16,7 +16,7 @@ export const TextField: FC<TextFieldProps> = ({ label, error, id, className = ''
       <input
         id={id}
         className={[
-          'rounded-input bg-input px-3.5 py-2.5 text-[14px] text-text shadow-subtle placeholder:text-text-faint',
+          'rounded-input bg-input px-3 py-1.5 text-[14px] text-text shadow-subtle placeholder:text-text-faint',
           'outline-none transition-shadow focus:shadow-subtle-focus focus:ring-2 focus:ring-accent/40',
           error ? 'ring-2 ring-danger/50' : '',
           className,

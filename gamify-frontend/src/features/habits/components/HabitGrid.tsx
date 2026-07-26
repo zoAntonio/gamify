@@ -35,7 +35,7 @@ export const HabitGrid: FC<HabitGridProps> = ({ completions, couleur }) => {
         <div
           key={cell.iso}
           title={cell.iso}
-          className="aspect-square w-full min-w-1.5 rounded-[3px]"
+          className="aspect-square w-full min-w-1.5 rounded-small"
           style={{ backgroundColor: cell.isDone ? couleur : `${couleur}22` }}
         />
       ))}

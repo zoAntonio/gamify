@@ -62,7 +62,7 @@ export const AgendaHeader: FC<AgendaHeaderProps> = ({
             aria-pressed={view === item.view}
             onClick={() => onViewChange(item.view)}
             className={[
-              'rounded-[8px] px-3 py-1.5 text-[13px] font-medium transition-colors',
+              'rounded-control px-3 py-1.5 text-[13px] font-medium transition-colors',
               view === item.view ? 'bg-accent text-white' : 'text-text-muted hover:text-text',
             ].join(' ')}
           >
