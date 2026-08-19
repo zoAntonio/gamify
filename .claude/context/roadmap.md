@@ -23,8 +23,8 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G0-T02 | ✅ Fait | 2026-07-03 | Avatar (enum + emoji placeholder) + domaines trackés. Domaines rendus **personnalisables** (écart assumé vs "liste prédéfinie" du ticket original — décision utilisateur) : 5 domaines système seedés en migration + création de domaines perso par l'utilisateur. |
 | G0-T03 | ✅ Fait | 2026-07-17 | Tableau de bord réel (`DashboardPage`) : carte du personnage façon FIFA (photo uploadée ou emoji de classe, niveau+titre, note générale = moyenne des 6 attributs, barre d'XP vers le prochain seuil), barres d'attributs + radar SVG, XP par période (semaine/mois/année), journal du jour. Pas encore de streak ni dernier badge sur le dashboard (badges = G2-T15). |
 | G1-T05 | ✅ Fait | 2026-07-17 | Courbe de niveaux dans `User.ajouterXp` : seuils doublants (niveau n à 100·(2^(n−1)−1) XP : 100, 300, 700...), 8 titres Novice→Légende, niveau ne baisse jamais. Vérifié : 100 XP → niveau 2 "Initié", seuil suivant 300. Pas d'animation de montée de niveau (G1-T14). |
-| G1-T04 | 🔶 Partiel | 2026-07-17 | Historisation branchée : `ProgressionLog` écrit à chaque validation de tâche, check d'habitude et bonus de série (source, attribut, delta, XP avant/après). Gains +1 seulement — malus −2/−3(PRE), plancher 0 et pénalité minuit toujours pas faits. |
-| G1-T06 | 🔶 Partiel | 2026-07-17 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Pas encore de vue régressions en rouge (aucune perte n'existe tant que G1-T04 n'a pas les malus). |
+| G1-T04 | ✅ Fait | 2026-08-19 | Volet malus complété : `UserProfile.appliquerMalusInactivite` applique −2/jour sans gain (−3 pour PRE), plancher 0, +−5 cumulé exactement au 3ᵉ jour consécutif de manque (compteur par attribut, remis à 0 dès qu'un gain a lieu). Job `InactivityPenaltyService` (par jour, par profil, idempotent via `derniereEvaluationPenalites`), déclenché à minuit par `InactivityPenaltyScheduler` (`@EnableScheduling`) et manuellement via `POST /api/backoffice/penalites/executer` (admin, rattrapage + tests). Chaque malus historisé dans `ProgressionLog` (delta négatif, daté du jour évalué). Migration V17. |
+| G1-T06 | 🔶 Partiel | 2026-08-19 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Les malus G1-T04 alimentent maintenant réellement des deltas négatifs dans `ProgressionLog` (vérifié en base), mais aucune UI dédiée ne les traite encore différemment des gains (pas de rouge/tremblement — reste le périmètre G1-T14 "animations gain/pénalité"). |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
 | G1-T10 | 🔶 Partiel | 2026-07-17 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. Pas encore de récurrence ni resize par poignée. |
 | G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
@@ -229,6 +229,58 @@ qu'un ticket passe la checklist de validation — pas avant.
   composant front ne l'appelle). Le classement admin (`/admin/users`) n'est
   pas non plus le classement public multi-utilisateurs de G2-T17 (profils
   publics/privés, fil d'activité social — non traité).
+
+**Écarts/dette introduits par le malus d'inactivité G1-T04 (2026-08-19) :**
+- **Décision non explicite dans domain.md, à noter** : le malus n'évalue que les
+  attributs liés à au moins un domaine que l'utilisateur **track**
+  (`UserProfile.domainesTrackes`), pas les 6 attributs systématiquement. Raison :
+  domain.md ne prévoit aucun moyen de regagner un attribut hors domaine tracké
+  (créer une activité/habitude nécessite un domaine, et rien n'oblige un domaine
+  ciblé à être dans `domainesTrackes`), donc évaluer les 6 sans distinction
+  ferait tomber à 0 en ~5 jours tout attribut qu'un utilisateur n'a jamais eu la
+  possibilité de faire progresser — verrou définitif plutôt qu'un mécanisme
+  d'équilibrage. À reconsidérer si le produit veut au contraire pousser à
+  équilibrer tous les attributs dès l'inscription.
+- Le malus cumulé de −5 (domain.md : "3 jours consécutifs de manque") est
+  interprété comme un **seuil ponctuel** : appliqué une seule fois, exactement
+  au 3ᵉ jour consécutif de manque (comme l'état "chute" de l'avatar après 3
+  manques, même section de domain.md), pas rejoué à chaque jour au-delà (jour 4,
+  5...) ni répété tous les 3 jours. À clarifier avec l'utilisateur si un
+  comportement répétitif était attendu.
+- Job idempotent par profil via `UserProfile.derniereEvaluationPenalites` (jour
+  déjà évalué jamais retraité) — permet un rattrapage jour par jour si le
+  serveur était arrêté à minuit. Déclenché en prod par `InactivityPenaltyScheduler`
+  (`@Scheduled` minuit, bean séparé du service pour ne pas contourner le proxy
+  `@Transactional` par self-invocation) et manuellement par
+  `POST /api/backoffice/penalites/executer` (admin, paramètre `date` optionnel) —
+  ce dernier endpoint existe surtout pour permettre la vérification HTTP réelle
+  exigée par le ticket sans attendre un vrai minuit.
+- **Risque identifié, pas corrigé ici** : `UserProfile.retirerGainAttribut`
+  (annulation d'une complétion d'habitude, G1-T11) n'a pas de plancher à 0. Si un
+  attribut est déjà tombé à 0 par malus puis qu'une ancienne complétion sur ce
+  même attribut est annulée, l'attribut peut passer négatif. Pas rencontré dans
+  les tests ci-dessous (aucune annulation combinée à un malus), mais à corriger
+  si signalé.
+- Vérifié par appels HTTP réels (curl, comptes jetables `malustest`/`malustest2`) :
+  domaines trackés = Sport (FOR/VIT) + un domaine perso PRE/CHA, `INT`/`RES` hors
+  scope volontairement non trackés. Après 2 jours de manque backdatés en base
+  (`derniere_evaluation_penalites`) : FOR/VIT/CHA à 6 (10−2×2), PRE à 4 (10−3×2),
+  INT/RES inchangés à 10, 8 lignes `progression_logs` (delta −2/−3 correctement
+  attribué par jour). Après un 3ᵉ jour de manque : FOR/VIT/CHA/PRE tombent à 0
+  (plancher respecté malgré −2/−3 puis −5 supplémentaire), 8 nouvelles lignes
+  dont les 4 malus cumulés "3 jours consécutifs". Rejouer le job sur la même date
+  ne crée aucune ligne supplémentaire (idempotence confirmée, 16 lignes stables).
+  Endpoint refusé en 403 pour un compte non admin. Cas gain-le-jour-même vérifié
+  sur un second compte : validation d'une tâche FOR le jour évalué → FOR épargné
+  du malus (reste à 11, compteur remis à 0) tandis que VIT (non travaillé)
+  tombe bien à 8 ce même jour — confirme que `reinitialiserManque` coupe
+  correctement la série avant incrémentation du malus.
+- Comptes de test (`malustest@test.com`, `malustest2@test.com`) et domaine perso
+  "Tir a l arc" laissés en base locale (même pratique que les comptes jetables
+  des tickets précédents) — à nettoyer si la base doit rester propre.
+- Toujours aucun test automatisé (`UserProfile.appliquerMalusInactivite`/
+  `InactivityPenaltyService` seraient de bons premiers candidats JUnit, la
+  logique de rattrapage jour par jour étant la plus sensible aux erreurs).
 
 ## Dette technique connue
 

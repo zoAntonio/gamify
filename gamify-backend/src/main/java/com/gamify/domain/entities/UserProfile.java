@@ -21,6 +21,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
@@ -86,6 +87,24 @@ public class UserProfile {
     private int charisme = 10;
     private int resistance = 10;
 
+    // Compteurs de jours consécutifs sans gain, un par attribut (G1-T04, domain.md :
+    // malus −2/−3(PRE) par jour de manque, +−5 cumulé au 3e jour consécutif) — remis
+    // à zéro dès qu'un gain a lieu ce jour-là, incrémenté par le job de minuit
+    // (InactivityPenaltyService). Même choix de style que les 6 champs d'attributs
+    // ci-dessus (champs plats + switch) plutôt qu'une Map, pour rester cohérent.
+    private int joursSansActiviteIntelligence = 0;
+    private int joursSansActiviteForce = 0;
+    private int joursSansActiviteVitalite = 0;
+    private int joursSansActivitePrecision = 0;
+    private int joursSansActiviteCharisme = 0;
+    private int joursSansActiviteResistance = 0;
+
+    // Dernier jour (inclus) pour lequel le job de pénalités d'inactivité a été
+    // évalué pour ce profil — évite une double application si le job est rejoué
+    // pour une même date, et permet de rattraper les jours manqués (serveur arrêté)
+    // en avançant d'un jour à la fois depuis cette date.
+    private LocalDate derniereEvaluationPenalites = LocalDate.now();
+
     // Progression
     private int xpTotal = 0;
     private int niveau = 1;
@@ -127,6 +146,69 @@ public class UserProfile {
             case RES -> resistance--;
         }
     }
+
+    /**
+     * Un jour sans gain sur l'attribut (job de minuit, domain.md) : applique le
+     * malus de base (−2, −3 pour PRE), incrémente le compteur de jours consécutifs
+     * de manque, et déclenche en plus le malus cumulé de −5 pts exactement au 3e
+     * jour consécutif (pas à chaque jour au-delà). Plancher 0 toujours respecté.
+     */
+    public MalusInactivite appliquerMalusInactivite(Attribut attribut) {
+        int consecutifs = getJoursSansActivite(attribut) + 1;
+        setJoursSansActivite(attribut, consecutifs);
+
+        int malusBase = attribut == Attribut.PRE ? 3 : 2;
+        appliquerVariation(attribut, -malusBase);
+
+        boolean malusConsecutifDeclenche = consecutifs == 3;
+        if (malusConsecutifDeclenche) {
+            appliquerVariation(attribut, -5);
+        }
+        return new MalusInactivite(malusBase, malusConsecutifDeclenche);
+    }
+
+    /** Un jour avec gain sur l'attribut : la série de manque repart de zéro. */
+    public void reinitialiserManque(Attribut attribut) {
+        setJoursSansActivite(attribut, 0);
+    }
+
+    public int getJoursSansActivite(Attribut attribut) {
+        return switch (attribut) {
+            case INT -> joursSansActiviteIntelligence;
+            case FOR -> joursSansActiviteForce;
+            case VIT -> joursSansActiviteVitalite;
+            case PRE -> joursSansActivitePrecision;
+            case CHA -> joursSansActiviteCharisme;
+            case RES -> joursSansActiviteResistance;
+        };
+    }
+
+    private void setJoursSansActivite(Attribut attribut, int valeur) {
+        switch (attribut) {
+            case INT -> joursSansActiviteIntelligence = valeur;
+            case FOR -> joursSansActiviteForce = valeur;
+            case VIT -> joursSansActiviteVitalite = valeur;
+            case PRE -> joursSansActivitePrecision = valeur;
+            case CHA -> joursSansActiviteCharisme = valeur;
+            case RES -> joursSansActiviteResistance = valeur;
+        }
+    }
+
+    /** Variation bornée au plancher 0 (domain.md : "un attribut ne peut jamais devenir négatif"). */
+    private void appliquerVariation(Attribut attribut, int delta) {
+        int valeur = Math.max(0, getValeurAttribut(attribut) + delta);
+        switch (attribut) {
+            case INT -> intelligence = valeur;
+            case FOR -> force = valeur;
+            case VIT -> vitalite = valeur;
+            case PRE -> precision = valeur;
+            case CHA -> charisme = valeur;
+            case RES -> resistance = valeur;
+        }
+    }
+
+    /** Détail d'un malus d'inactivité appliqué, pour historisation par le service appelant. */
+    public record MalusInactivite(int malusBase, boolean malusConsecutifDeclenche) {}
 
     public int getValeurAttribut(Attribut attribut) {
         return switch (attribut) {
