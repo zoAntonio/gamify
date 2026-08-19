@@ -42,6 +42,7 @@ public class HabitService {
     private final DomaineRepository domaineRepository;
     private final UserRepository userRepository;
     private final ProgressionLogRepository progressionLogRepository;
+    private final BadgeService badgeService;
 
     @Transactional
     public HabitResponse create(String email, HabitRequest request) {
@@ -118,6 +119,7 @@ public class HabitService {
             habitRepository.save(habit);
         }
         userRepository.save(user);
+        badgeService.evaluateAndUnlock(user, habit.getDomaine());
 
         log.info("Habitude '{}' cochée par {} pour {} (+1 {}, +{} XP{}, streak {})",
                 habit.getNom(), email, date, habit.getAttributCible(), habit.getXpRecompense(),

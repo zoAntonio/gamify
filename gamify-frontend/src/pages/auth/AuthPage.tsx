@@ -21,7 +21,12 @@ export const AuthPage: FC = () => {
   const navigate = useNavigate();
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  const handleAuthSuccess = (auth: { token: string; username: string; email: string }) => {
+  const handleAuthSuccess = (auth: {
+    token: string;
+    username: string;
+    email: string;
+    isAdmin: boolean;
+  }) => {
     setAuth(auth);
     navigate('/');
   };

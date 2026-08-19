@@ -1,5 +1,6 @@
 package com.gamify.infrastructure.config;
 
+import com.gamify.presentation.middleware.JsonAccessDeniedHandler;
 import com.gamify.presentation.middleware.JsonAuthenticationEntryPoint;
 import com.gamify.presentation.middleware.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,7 @@ public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
     private final JsonAuthenticationEntryPoint jsonAuthenticationEntryPoint;
+    private final JsonAccessDeniedHandler jsonAccessDeniedHandler;
 
     @Value("${gamify.cors.allowed-origin}")
     private String allowedOrigin;
@@ -37,13 +39,18 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .exceptionHandling(ex -> ex.authenticationEntryPoint(jsonAuthenticationEntryPoint))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(jsonAuthenticationEntryPoint)
+                .accessDeniedHandler(jsonAccessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                 // Avatars publics : les <img> ne peuvent pas envoyer le JWT.
                 // Noms de fichiers UUID non devinables — compromis assumé (roadmap).
                 .requestMatchers("/uploads/**").permitAll()
+                // Backoffice : un seul admin automatique (gamify.admin.email), voir
+                // UserDetailsServiceImpl pour l'attribution du rôle ADMIN.
+                .requestMatchers("/api/backoffice/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

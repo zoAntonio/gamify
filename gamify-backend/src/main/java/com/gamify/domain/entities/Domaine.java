@@ -38,6 +38,9 @@ public class Domaine extends BaseEntity {
     @JoinColumn(name = "cree_par_user_id")
     private User creePar;
 
+    // Désactivation logique depuis le backoffice (jamais de suppression physique).
+    private boolean actif = true;
+
     public boolean isSysteme() {
         return creePar == null;
     }

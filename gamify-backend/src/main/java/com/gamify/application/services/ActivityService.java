@@ -33,6 +33,7 @@ public class ActivityService {
     private final DomaineRepository domaineRepository;
     private final UserRepository userRepository;
     private final ProgressionLogRepository progressionLogRepository;
+    private final BadgeService badgeService;
 
     @Transactional
     public ActivityResponse create(String email, ActivityRequest request) {
@@ -119,6 +120,7 @@ public class ActivityService {
         user.appliquerGainAttribut(activity.getAttributCible());
         user.ajouterXp(activity.getXpRecompense());
         userRepository.save(user);
+        badgeService.evaluateAndUnlock(user, activity.getDomaine());
 
         ProgressionLog logEntry = new ProgressionLog();
         logEntry.setUser(user);

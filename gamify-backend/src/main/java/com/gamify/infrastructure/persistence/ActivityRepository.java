@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+
 @Repository
 public interface ActivityRepository extends JpaRepository<Activity, Long> {
 
@@ -26,5 +28,19 @@ public interface ActivityRepository extends JpaRepository<Activity, Long> {
             @Param("attributCible") Attribut attributCible,
             @Param("statut") StatutKanban statut,
             Pageable pageable
+    );
+
+    @Query("""
+            SELECT COUNT(a) FROM Activity a
+            WHERE a.user.id = :userId
+            AND a.domaine.id = :domaineId
+            AND a.statut = com.gamify.domain.enums.StatutKanban.TERMINE
+            AND a.completedAt BETWEEN :debut AND :fin
+            """)
+    long countValideesDansDomaineEtPeriode(
+            @Param("userId") Long userId,
+            @Param("domaineId") Long domaineId,
+            @Param("debut") LocalDateTime debut,
+            @Param("fin") LocalDateTime fin
     );
 }

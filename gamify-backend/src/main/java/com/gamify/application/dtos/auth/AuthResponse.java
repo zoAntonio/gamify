@@ -5,6 +5,7 @@ public record AuthResponse(
         String username,
         String email,
         int niveau,
-        int xpTotal
+        int xpTotal,
+        boolean isAdmin
 ) {
 }

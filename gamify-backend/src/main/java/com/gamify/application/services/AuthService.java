@@ -10,6 +10,7 @@ import com.gamify.infrastructure.config.JwtService;
 import com.gamify.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -21,6 +22,9 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+
+    @Value("${gamify.admin.email}")
+    private String adminEmail;
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.email())) {
@@ -38,7 +42,7 @@ public class AuthService {
 
         log.info("Nouveau compte créé : {}", user.getUsername());
         String token = jwtService.generateToken(user.getEmail());
-        return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getNiveau(), user.getXpTotal());
+        return toAuthResponse(user, token);
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -50,6 +54,11 @@ public class AuthService {
 
         log.info("Connexion réussie : {}", user.getUsername());
         String token = jwtService.generateToken(user.getEmail());
-        return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getNiveau(), user.getXpTotal());
+        return toAuthResponse(user, token);
+    }
+
+    private AuthResponse toAuthResponse(User user, String token) {
+        boolean isAdmin = user.getEmail().equalsIgnoreCase(adminEmail);
+        return new AuthResponse(token, user.getUsername(), user.getEmail(), user.getNiveau(), user.getXpTotal(), isAdmin);
     }
 }
