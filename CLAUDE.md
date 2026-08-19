@@ -19,7 +19,11 @@ Backlog / phases : [.claude/context/roadmap.md](.claude/context/roadmap.md).
   (pas ESLint). Port 5173. Empaquetage mobile Android prévu plus tard via Capacitor.
 - **BDD** : PostgreSQL, schéma géré **exclusivement** par migrations Flyway
   (`gamify-backend/src/main/resources/db/migration/V*.sql`).
-- Scripts de lancement : `scripts/dev.ps1`, `scripts/setup-db.ps1` (voir README.md).
+- Scripts de lancement : `scripts/dev.bat` (lance les deux serveurs, sans contrôle)
+  ou `scripts/devctl.ps1` (contrôleur interactif : `start`/`stop`/`build`).
+  ⚠️ Le README.md référence encore `scripts/dev.ps1`/`scripts/setup-db.ps1` qui
+  n'existent plus (dérive non liée au backoffice, pas corrigée ici — à traiter
+  séparément).
 
 ## Méthodologie de développement — règle fondamentale
 
@@ -82,14 +86,27 @@ Points non négociables (grille de revue P0, cf. documents) :
   (`Activity`, statuts + récompenses), habitudes/streaks (`Habit`/`HabitCompletion`),
   agenda (`AgendaEvent`), stats (`ProgressionLog` historisé à chaque gain,
   `/api/stats/progression` + `/api/stats/journal`), niveaux/titres
-  (`User.ajouterXp`, seuils doublants). Migrations jusqu'à **V7**.
+  (`User.ajouterXp`, seuils doublants), **backoffice admin** (CRUD domaines
+  système, catalogue de badges Bronze/Argent/Or par domaine, saisons —
+  fenêtre de comptage des badges, une seule active à la fois —, classement/
+  stats utilisateurs en lecture seule ; déblocage auto de badges branché dans
+  `ActivityService`/`HabitService`). Migrations jusqu'à **V14**.
+- Rôle **`ROLE_ADMIN`** : un seul admin, désigné par email
+  (`gamify.admin.email`), jamais promu via l'app — calculé à la volée au
+  login/register (`AuthService`/`UserDetailsServiceImpl`), pas stocké en base.
+  `/api/backoffice/**` protégé par `hasRole("ADMIN")`
+  (`JsonAccessDeniedHandler` pour un 403 JSON propre). Pattern à réutiliser
+  pour toute future route admin.
 - Le frontend est en structure feature-first complète : `features/auth`, `profile`,
   `activities` (kanban 3 colonnes drag & drop), `agenda` (vues semaine/jour/mois),
   `habits` (grille type HabitKit), `dashboard` (carte du personnage FIFA-like,
-  radar/barres d'attributs SVG faits main, XP par période, journal). UI générique
-  dans `components/ui/` (`Button`, `Modal`, `Select`, `TextField`...), thème
-  Tailwind v4 dans `index.css` (tokens couleurs/attributs). `react-router-dom` +
-  `zustand` ; toujours pas de TanStack Query (hooks fetch maison par feature).
+  radar/barres d'attributs SVG faits main, XP par période, journal),
+  `backoffice/{domaines,users,saisons,badges}` (pages `/admin/*`, garde de
+  route `RequireAdmin`, section "Administration" dans `Sidebar` visible
+  seulement si `isAdmin`). UI générique dans `components/ui/` (`Button`,
+  `Modal`, `Select`, `TextField`, `Pagination`...), thème Tailwind v4 dans
+  `index.css` (tokens couleurs/attributs). `react-router-dom` + `zustand` ;
+  toujours pas de TanStack Query (hooks fetch maison par feature).
 - Dette courante et écarts assumés : voir la section "Suivi d'avancement" et les
   blocs "Écarts/dette" de [.claude/context/roadmap.md](.claude/context/roadmap.md)
   — c'est la source de vérité, tenue à jour à chaque feature.

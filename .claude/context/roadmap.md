@@ -29,6 +29,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G1-T10 | 🔶 Partiel | 2026-07-17 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. Pas encore de récurrence ni resize par poignée. |
 | G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
 | G1-T09 | 🔶 Partiel | 2026-07-17 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`, hauteur bornée + scroll interne pour le paysage mobile). Responsive : rail horizontal à snap (une colonne ≈ 85% de l'écran) sous `md`, grille 3 colonnes au-dessus ; `viewport-fit=cover` ajouté pour les écrans à encoche. Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). Toujours **pas d'UI de filtres/tri** ni de ratio réalisé/objectif. |
+| G2-T15 | 🔶 Partiel | 2026-08-19 | Backoffice admin livré (périmètre plus large que le seul ticket, voir écarts) : CRUD domaines système (créer/modifier/désactiver), catalogue de badges Bronze/Argent/Or par domaine (CRUD complet), saisons (créer/clôturer, une seule active à la fois — fenêtre de comptage des badges), classement/stats utilisateurs (lecture seule, tri XP/niveau). Déblocage auto de badges branché dans `ActivityService`/`HabitService`. Rôle `ROLE_ADMIN` unique désigné par email (`gamify.admin.email`), `/api/backoffice/**` protégé, garde `RequireAdmin` côté front. Manque pour clore G2-T15 : animations/notifications de déblocage, galerie de badges côté joueur (`GET /api/badges/me` existe côté API, aucune UI ne l'appelle). |
 
 **Écarts/dette introduits par G0-T01/G0-T02, notés consciemment plutôt que masqués :**
 - `GET /api/domaines` retourne une `List<DomaineResponse>` non paginée — accepté
@@ -170,6 +171,47 @@ qu'un ticket passe la checklist de validation — pas avant.
   date) **pas vérifié dans un navigateur réel** — même limite d'environnement
   que le reste de la feature habitudes, à tester manuellement par
   l'utilisateur.
+
+**Écarts/dette introduits par le backoffice admin G2-T15 (2026-08-19) :**
+- Périmètre livré plus large que G2-T15 seul : CRUD domaines système et
+  classement/stats utilisateurs (lecture seule) ne correspondent à aucun
+  ticket formel du backlog d'origine — ajout hors-backlog à la demande de
+  l'utilisateur, même logique que la personnalisation des domaines en G0-T02.
+- Migrations V10 à V14 : `domaines.actif` (désactivation logique, jamais de
+  suppression physique), `saisons` (une seule active à la fois — index unique
+  partiel sur `cloturee=false` — pas de `PUT`/suppression, seulement créer et
+  clôturer), `badge_definitions`/`user_badges` (append-only, un badge peut
+  être regagné à chaque nouvelle saison), seed d'une saison de départ + 15
+  badges (3 paliers × 5 domaines système, seuils de validations arbitraires —
+  ajustables ensuite depuis `/admin/badges` sans nouvelle migration), seed
+  d'un compte de test `admin@admin.com` / `admin` (rôle admin désigné par
+  email via `gamify.admin.email`, qui ne pointe plus vers l'email personnel
+  de l'utilisateur — décision explicite pour faciliter les tests locaux).
+- **Sécurité — ne jamais reproduire hors local** : le compte seedé en V14 a un
+  mot de passe faible et connu (`admin`), son hash BCrypt est commité en clair
+  dans l'historique git. Acceptable en dev solo ; à retirer ou changer avant
+  tout partage/déploiement de ce repo.
+- Vérifié : `mvnw clean compile` (92 fichiers) et `npm run build`/`npm run
+  lint` propres des deux côtés ; connexion admin testée en HTTP réel (curl,
+  `isAdmin: true` retourné) après correction d'un blocage Flyway au démarrage
+  (conflit de clé unique sur `users.email`, causé par un compte de diagnostic
+  créé par erreur pendant les tests puis nettoyé en base). CRUD (créer/
+  modifier/désactiver un domaine et un badge, créer/clôturer une saison,
+  classement paginé trié XP/niveau) vérifié manuellement dans le navigateur
+  par l'utilisateur — pas de test HTTP réel systématique sur chacun des 4 CRUD
+  au-delà du login.
+- Bug corrigé au passage : `AdminDomainesPage`/`RequireAdmin` existaient déjà
+  en fichiers mais n'étaient câblés nulle part dans `AppRouter.tsx` (aucune
+  route ne les montait). Les 4 pages admin (domaines/users/saisons/badges)
+  sont maintenant sous `RequireAdmin`, avec une section "Administration" dans
+  `Sidebar.tsx` visible seulement si `isAdmin`.
+- Toujours aucun test automatisé (les 4 CRUD backoffice et
+  `BadgeService.evaluateAndUnlock` seraient de bons premiers candidats JUnit).
+- Reste hors scope pour clore G2-T15 : animations de déblocage, notifications,
+  galerie de badges côté joueur (`GET /api/badges/me` existe côté API, aucun
+  composant front ne l'appelle). Le classement admin (`/admin/users`) n'est
+  pas non plus le classement public multi-utilisateurs de G2-T17 (profils
+  publics/privés, fil d'activité social — non traité).
 
 ## Dette technique connue
 
