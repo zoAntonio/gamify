@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { useAuthStore } from '@/store/useAuthStore';
 
 export const API_ORIGIN = 'http://localhost:8081';
@@ -15,19 +16,27 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const token = useAuthStore.getState().token;
   // Pour un FormData, le navigateur pose lui-même le Content-Type multipart (boundary).
   const isFormData = options.body instanceof FormData;
+  const method = options.method ?? 'GET';
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers: {
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...options.headers,
+      },
+    });
+  } catch (error) {
+    logger.error('api', `${method} ${path} : requête réseau échouée`, { error });
+    throw error;
+  }
 
   const body = (await response.json().catch(() => null)) as ApiResponse<T> | null;
 
   if (!response.ok || !body || !body.success) {
+    logger.warn('api', `${method} ${path} → ${response.status} : ${body?.message ?? 'erreur inconnue'}`);
     if (response.status === 401) {
       useAuthStore.getState().logout();
       window.location.href = '/401';
