@@ -17,4 +17,12 @@ public interface ProgressionLogRepository extends JpaRepository<ProgressionLog, 
 
     Page<ProgressionLog> findByUserIdAndDateGreaterThanEqualOrderByDateDesc(
             Long userId, LocalDateTime date, Pageable pageable);
+
+    /**
+     * Utilisé par {@code InactivityPenaltyService} pour savoir si un attribut a été
+     * gagné (delta positif) un jour donné — sert de base à la décision "manque" du
+     * job de minuit (domain.md).
+     */
+    boolean existsByUserIdAndAttributAndDateGreaterThanEqualAndDateLessThanAndDeltaGreaterThan(
+            Long userId, String attribut, LocalDateTime from, LocalDateTime to, int delta);
 }

@@ -90,7 +90,14 @@ Points non négociables (grille de revue P0, cf. documents) :
   système, catalogue de badges Bronze/Argent/Or par domaine, saisons —
   fenêtre de comptage des badges, une seule active à la fois —, classement/
   stats utilisateurs en lecture seule ; déblocage auto de badges branché dans
-  `ActivityService`/`HabitService`). Migrations jusqu'à **V16**.
+  `ActivityService`/`HabitService`). Malus d'inactivité (G1-T04, domain.md) :
+  −2/jour sans gain sur un attribut (−3 pour PRE), plancher 0, +−5 cumulé au
+  3ᵉ jour consécutif de manque — n'évalue que les attributs des domaines
+  **trackés** par l'utilisateur (décision assumée, voir roadmap.md). Premier
+  job planifié du projet (`@EnableScheduling` + `InactivityPenaltyScheduler`,
+  minuit), doublé d'un déclenchement manuel admin
+  (`POST /api/backoffice/penalites/executer`, idempotent) pour rattrapage et
+  tests. Migrations jusqu'à **V17**.
 - **`User` (credentials) / `UserProfile` (données de jeu) séparés** (V15/V16) :
   `users` ne porte plus que id/username/email/password/is_admin/audit ; tous
   les attributs RPG, xp/niveau/titre, avatar/avatar_image et domaines trackés
