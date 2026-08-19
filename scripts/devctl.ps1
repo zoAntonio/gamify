@@ -1,7 +1,8 @@
 # Controleur interactif du backend/frontend Gamify.
 # Tape "start" pour lancer les deux serveurs (chacun dans sa propre fenetre
-# PowerShell), "stop" pour tout arreter et fermer ces fenetres, "exit" pour
-# quitter le controleur.
+# PowerShell), "stop" pour tout arreter et fermer ces fenetres, "build" pour
+# verifier que le backend et le frontend compilent sans lancer de serveur,
+# "exit" pour quitter le controleur.
 
 $root = Split-Path -Parent $PSScriptRoot
 $backendProcess = $null
@@ -56,17 +57,63 @@ function Stop-Dev {
     Write-Host "Fait." -ForegroundColor Green
 }
 
-Write-Host "Controleur Gamify -- tape 'start', 'stop' ou 'exit'." -ForegroundColor Magenta
+function Test-Build {
+    $backendOk = $false
+    $frontendOk = $false
+
+    Write-Host "Build backend (mvnw compile)..." -ForegroundColor Cyan
+    Push-Location "$root\gamify-backend"
+    try {
+        $env:JAVA_HOME = 'C:\Program Files\Eclipse Adoptium\jdk-17.0.19.10-hotspot'
+        & .\mvnw.cmd compile
+        $backendOk = $LASTEXITCODE -eq 0
+    }
+    finally {
+        Pop-Location
+    }
+    if ($backendOk) {
+        Write-Host "Backend : build OK." -ForegroundColor Green
+    }
+    else {
+        Write-Host "Backend : build EN ECHEC." -ForegroundColor Red
+    }
+
+    Write-Host "Build frontend (npm run build -- tsc + vite build)..." -ForegroundColor Cyan
+    Push-Location "$root\gamify-frontend"
+    try {
+        & npm run build
+        $frontendOk = $LASTEXITCODE -eq 0
+    }
+    finally {
+        Pop-Location
+    }
+    if ($frontendOk) {
+        Write-Host "Frontend : build OK." -ForegroundColor Green
+    }
+    else {
+        Write-Host "Frontend : build EN ECHEC." -ForegroundColor Red
+    }
+
+    if ($backendOk -and $frontendOk) {
+        Write-Host "Build complet OK." -ForegroundColor Green
+    }
+    else {
+        Write-Host "Build EN ECHEC -- voir le detail ci-dessus." -ForegroundColor Red
+    }
+}
+
+Write-Host "Controleur Gamify -- tape 'start', 'stop', 'build' ou 'exit'." -ForegroundColor Magenta
 
 while ($true) {
     $command = (Read-Host '>').Trim().ToLower()
     switch ($command) {
         'start' { Start-Dev }
         'stop' { Stop-Dev }
+        'build' { Test-Build }
         { $_ -in @('exit', 'quit') } {
             Stop-Dev
             return
         }
-        default { Write-Host "Commande inconnue. Utilise 'start', 'stop' ou 'exit'." -ForegroundColor Yellow }
+        default { Write-Host "Commande inconnue. Utilise 'start', 'stop', 'build' ou 'exit'." -ForegroundColor Yellow }
     }
 }

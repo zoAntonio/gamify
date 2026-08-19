@@ -15,4 +15,5 @@ export interface AuthResponse {
   email: string;
   niveau: number;
   xpTotal: number;
+  isAdmin: boolean;
 }

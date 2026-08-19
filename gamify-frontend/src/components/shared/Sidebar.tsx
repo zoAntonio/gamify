@@ -20,8 +20,16 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/onboarding', label: 'Profil' },
 ];
 
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  { to: '/admin/domaines', label: 'Domaines' },
+  { to: '/admin/users', label: 'Utilisateurs' },
+  { to: '/admin/saisons', label: 'Saisons' },
+  { to: '/admin/badges', label: 'Badges' },
+];
+
 export const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
   const username = useAuthStore((state) => state.username);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
   const logout = useAuthStore((state) => state.logout);
 
   const navLinkClasses = ({ isActive }: { isActive: boolean }) =>
@@ -64,6 +72,19 @@ export const Sidebar: FC<SidebarProps> = ({ isOpen, onClose }) => {
               {item.label}
             </NavLink>
           ))}
+
+          {isAdmin && (
+            <>
+              <p className="mt-4 px-3 text-[11px] font-semibold uppercase tracking-wide text-text-faint">
+                Administration
+              </p>
+              {ADMIN_NAV_ITEMS.map((item) => (
+                <NavLink key={item.to} to={item.to} className={navLinkClasses} onClick={onClose}>
+                  {item.label}
+                </NavLink>
+              ))}
+            </>
+          )}
         </nav>
 
         <button
