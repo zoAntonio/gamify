@@ -7,6 +7,7 @@ import com.gamify.domain.entities.Habit;
 import com.gamify.domain.entities.HabitCompletion;
 import com.gamify.domain.entities.ProgressionLog;
 import com.gamify.domain.entities.User;
+import com.gamify.domain.entities.UserProfile;
 import com.gamify.domain.exceptions.ConflictException;
 import com.gamify.domain.exceptions.DomainException;
 import com.gamify.domain.exceptions.ForbiddenException;
@@ -15,6 +16,7 @@ import com.gamify.infrastructure.persistence.DomaineRepository;
 import com.gamify.infrastructure.persistence.HabitCompletionRepository;
 import com.gamify.infrastructure.persistence.HabitRepository;
 import com.gamify.infrastructure.persistence.ProgressionLogRepository;
+import com.gamify.infrastructure.persistence.UserProfileRepository;
 import com.gamify.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,7 @@ public class HabitService {
     private final HabitCompletionRepository completionRepository;
     private final DomaineRepository domaineRepository;
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final ProgressionLogRepository progressionLogRepository;
     private final BadgeService badgeService;
 
@@ -87,6 +90,7 @@ public class HabitService {
     public HabitResponse checkDate(String email, Long habitId, LocalDate date) {
         User user = findUserByEmail(email);
         Habit habit = findOwnedHabit(habitId, user);
+        UserProfile profile = findProfile(user);
 
         if (date.isAfter(LocalDate.now())) {
             throw new DomainException("Impossible de cocher une date future");
@@ -100,17 +104,17 @@ public class HabitService {
         completion.setDateCompletion(date);
         completionRepository.save(completion);
 
-        int xpAvant = user.getXpTotal();
-        user.appliquerGainAttribut(habit.getAttributCible());
-        user.ajouterXp(habit.getXpRecompense());
-        saveProgressionLog(user, xpAvant, 1, habit.getNom(), habit.getAttributCible().name());
+        int xpAvant = profile.getXpTotal();
+        profile.appliquerGainAttribut(habit.getAttributCible());
+        profile.ajouterXp(habit.getXpRecompense());
+        saveProgressionLog(user, profile, xpAvant, 1, habit.getNom(), habit.getAttributCible().name());
 
         int streak = computeCurrentStreak(habitId, date);
         boolean bonus = streak > 0 && streak % 7 == 0;
         if (bonus) {
-            int xpAvantBonus = user.getXpTotal();
-            user.ajouterXp(STREAK_BONUS_XP);
-            saveProgressionLog(user, xpAvantBonus, 0, "Bonus série 7 jours — " + habit.getNom(), null);
+            int xpAvantBonus = profile.getXpTotal();
+            profile.ajouterXp(STREAK_BONUS_XP);
+            saveProgressionLog(user, profile, xpAvantBonus, 0, "Bonus série 7 jours — " + habit.getNom(), null);
         }
         completion.setBonusApplique(bonus);
         completionRepository.save(completion);
@@ -118,7 +122,7 @@ public class HabitService {
             habit.setMeilleurStreak(streak);
             habitRepository.save(habit);
         }
-        userRepository.save(user);
+        userProfileRepository.save(profile);
         badgeService.evaluateAndUnlock(user, habit.getDomaine());
 
         log.info("Habitude '{}' cochée par {} pour {} (+1 {}, +{} XP{}, streak {})",
@@ -137,6 +141,7 @@ public class HabitService {
     public HabitResponse annuler(String email, Long habitId, LocalDate date) {
         User user = findUserByEmail(email);
         Habit habit = findOwnedHabit(habitId, user);
+        UserProfile profile = findProfile(user);
 
         HabitCompletion completion = completionRepository
                 .findByHabitIdAndDateCompletionAndAnnuleFalse(habitId, date)
@@ -145,17 +150,17 @@ public class HabitService {
         completion.setAnnule(true);
         completionRepository.save(completion);
 
-        int xpAvant = user.getXpTotal();
-        user.retirerGainAttribut(habit.getAttributCible());
-        user.retirerXp(habit.getXpRecompense());
-        saveProgressionLog(user, xpAvant, -1, "Annulation — " + habit.getNom(), habit.getAttributCible().name());
+        int xpAvant = profile.getXpTotal();
+        profile.retirerGainAttribut(habit.getAttributCible());
+        profile.retirerXp(habit.getXpRecompense());
+        saveProgressionLog(user, profile, xpAvant, -1, "Annulation — " + habit.getNom(), habit.getAttributCible().name());
 
         if (completion.isBonusApplique()) {
-            int xpAvantBonus = user.getXpTotal();
-            user.retirerXp(STREAK_BONUS_XP);
-            saveProgressionLog(user, xpAvantBonus, 0, "Annulation bonus série — " + habit.getNom(), null);
+            int xpAvantBonus = profile.getXpTotal();
+            profile.retirerXp(STREAK_BONUS_XP);
+            saveProgressionLog(user, profile, xpAvantBonus, 0, "Annulation bonus série — " + habit.getNom(), null);
         }
-        userRepository.save(user);
+        userProfileRepository.save(profile);
 
         habit.setMeilleurStreak(computeMeilleurStreakHistorique(habitId));
         habitRepository.save(habit);
@@ -164,11 +169,11 @@ public class HabitService {
         return toResponse(habit);
     }
 
-    private void saveProgressionLog(User user, int xpAvant, int delta, String source, String attribut) {
+    private void saveProgressionLog(User user, UserProfile profile, int xpAvant, int delta, String source, String attribut) {
         ProgressionLog logEntry = new ProgressionLog();
         logEntry.setUser(user);
         logEntry.setXpAvant(xpAvant);
-        logEntry.setXpApres(user.getXpTotal());
+        logEntry.setXpApres(profile.getXpTotal());
         logEntry.setDelta(delta);
         logEntry.setSource(source);
         logEntry.setAttribut(attribut);
@@ -189,6 +194,11 @@ public class HabitService {
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+    }
+
+    private UserProfile findProfile(User user) {
+        return userProfileRepository.findById(user.getId())
+                .orElseThrow(() -> new NotFoundException("Profil introuvable"));
     }
 
     /**

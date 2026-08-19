@@ -6,6 +6,7 @@ import com.gamify.domain.entities.Activity;
 import com.gamify.domain.entities.Domaine;
 import com.gamify.domain.entities.ProgressionLog;
 import com.gamify.domain.entities.User;
+import com.gamify.domain.entities.UserProfile;
 import com.gamify.domain.enums.Attribut;
 import com.gamify.domain.enums.StatutKanban;
 import com.gamify.domain.exceptions.DomainException;
@@ -14,6 +15,7 @@ import com.gamify.domain.exceptions.NotFoundException;
 import com.gamify.infrastructure.persistence.ActivityRepository;
 import com.gamify.infrastructure.persistence.DomaineRepository;
 import com.gamify.infrastructure.persistence.ProgressionLogRepository;
+import com.gamify.infrastructure.persistence.UserProfileRepository;
 import com.gamify.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class ActivityService {
     private final ActivityRepository activityRepository;
     private final DomaineRepository domaineRepository;
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final ProgressionLogRepository progressionLogRepository;
     private final BadgeService badgeService;
 
@@ -116,16 +119,17 @@ public class ActivityService {
         activity.setCompletedAt(LocalDateTime.now());
         activityRepository.save(activity);
 
-        int xpAvant = user.getXpTotal();
-        user.appliquerGainAttribut(activity.getAttributCible());
-        user.ajouterXp(activity.getXpRecompense());
-        userRepository.save(user);
+        UserProfile profile = findProfile(user);
+        int xpAvant = profile.getXpTotal();
+        profile.appliquerGainAttribut(activity.getAttributCible());
+        profile.ajouterXp(activity.getXpRecompense());
+        userProfileRepository.save(profile);
         badgeService.evaluateAndUnlock(user, activity.getDomaine());
 
         ProgressionLog logEntry = new ProgressionLog();
         logEntry.setUser(user);
         logEntry.setXpAvant(xpAvant);
-        logEntry.setXpApres(user.getXpTotal());
+        logEntry.setXpApres(profile.getXpTotal());
         logEntry.setDelta(1);
         logEntry.setSource(activity.getNom());
         logEntry.setAttribut(activity.getAttributCible().name());
@@ -149,6 +153,11 @@ public class ActivityService {
     private User findUserByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+    }
+
+    private UserProfile findProfile(User user) {
+        return userProfileRepository.findById(user.getId())
+                .orElseThrow(() -> new NotFoundException("Profil introuvable"));
     }
 
     private ActivityResponse toResponse(Activity activity) {
