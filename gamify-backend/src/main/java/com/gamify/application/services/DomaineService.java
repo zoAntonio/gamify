@@ -25,7 +25,7 @@ public class DomaineService {
     @Transactional(readOnly = true)
     public List<DomaineResponse> listAvailable(String email) {
         User user = findUserByEmail(email);
-        return domaineRepository.findByCreeParIsNullOrCreePar(user).stream()
+        return domaineRepository.findAvailableForUser(user).stream()
                 .map(this::toDomaineResponse)
                 .toList();
     }
