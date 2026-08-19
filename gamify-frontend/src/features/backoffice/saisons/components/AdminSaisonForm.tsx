@@ -15,6 +15,7 @@ export const AdminSaisonForm: FC<AdminSaisonFormProps> = ({ onSubmit, isSubmitti
   const [dateFin, setDateFin] = useState('');
 
   const isValid = nom.trim() !== '' && dateDebut !== '' && dateFin !== '' && dateFin > dateDebut;
+  const dateFinError = dateFin && dateFin <= dateDebut ? 'Doit être après la date de début' : undefined;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -43,7 +44,7 @@ export const AdminSaisonForm: FC<AdminSaisonFormProps> = ({ onSubmit, isSubmitti
         label="Date de fin"
         type="date"
         value={dateFin}
-        error={dateFin && dateFin <= dateDebut ? 'Doit être après la date de début' : undefined}
+        {...(dateFinError ? { error: dateFinError } : {})}
         onChange={(event) => setDateFin(event.target.value)}
       />
       <Button type="submit" disabled={isSubmitting || !isValid}>

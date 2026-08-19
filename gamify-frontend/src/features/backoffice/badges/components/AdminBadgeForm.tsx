@@ -11,7 +11,10 @@ import type {
 } from '@/features/backoffice/badges/types/adminBadge.types';
 
 interface AdminBadgeFormProps {
-  badge?: BadgeDefinition;
+  // `| undefined` explicite : le formulaire est monté en mode création avec
+  // `badge={editing ?? undefined}` (exactOptionalPropertyTypes distingue
+  // "prop absente" de "prop passée à undefined").
+  badge?: BadgeDefinition | undefined;
   domaines: DomaineOption[];
   onSubmit: (request: BadgeDefinitionRequest) => void;
   isSubmitting: boolean;

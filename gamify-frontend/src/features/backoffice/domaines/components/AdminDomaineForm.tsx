@@ -6,7 +6,10 @@ import type { AdminDomaine, AdminDomaineRequest } from '@/features/backoffice/do
 import type { Attribut } from '@/types/attribut.types';
 
 interface AdminDomaineFormProps {
-  domaine?: AdminDomaine;
+  // `| undefined` explicite : le formulaire est monté en mode création avec
+  // `domaine={editing ?? undefined}` (exactOptionalPropertyTypes distingue
+  // "prop absente" de "prop passée à undefined").
+  domaine?: AdminDomaine | undefined;
   onSubmit: (request: AdminDomaineRequest) => void;
   isSubmitting: boolean;
 }
