@@ -48,8 +48,9 @@ public class SecurityConfig {
                 // Avatars publics : les <img> ne peuvent pas envoyer le JWT.
                 // Noms de fichiers UUID non devinables — compromis assumé (roadmap).
                 .requestMatchers("/uploads/**").permitAll()
-                // Backoffice : un seul admin automatique (gamify.admin.email), voir
-                // UserDetailsServiceImpl pour l'attribution du rôle ADMIN.
+                // Backoffice : rôle admin persisté (users.is_admin), initialisé à
+                // l'inscription par correspondance avec gamify.admin.email — voir
+                // AuthService (attribution) et UserDetailsServiceImpl (rôle ADMIN).
                 .requestMatchers("/api/backoffice/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )

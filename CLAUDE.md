@@ -86,17 +86,31 @@ Points non négociables (grille de revue P0, cf. documents) :
   (`Activity`, statuts + récompenses), habitudes/streaks (`Habit`/`HabitCompletion`),
   agenda (`AgendaEvent`), stats (`ProgressionLog` historisé à chaque gain,
   `/api/stats/progression` + `/api/stats/journal`), niveaux/titres
-  (`User.ajouterXp`, seuils doublants), **backoffice admin** (CRUD domaines
+  (`UserProfile.ajouterXp`, seuils doublants), **backoffice admin** (CRUD domaines
   système, catalogue de badges Bronze/Argent/Or par domaine, saisons —
   fenêtre de comptage des badges, une seule active à la fois —, classement/
   stats utilisateurs en lecture seule ; déblocage auto de badges branché dans
-  `ActivityService`/`HabitService`). Migrations jusqu'à **V14**.
-- Rôle **`ROLE_ADMIN`** : un seul admin, désigné par email
-  (`gamify.admin.email`), jamais promu via l'app — calculé à la volée au
-  login/register (`AuthService`/`UserDetailsServiceImpl`), pas stocké en base.
+  `ActivityService`/`HabitService`). Migrations jusqu'à **V16**.
+- **`User` (credentials) / `UserProfile` (données de jeu) séparés** (V15/V16) :
+  `users` ne porte plus que id/username/email/password/is_admin/audit ; tous
+  les attributs RPG, xp/niveau/titre, avatar/avatar_image et domaines trackés
+  vivent sur `user_profiles`, relation 1-1 à clé partagée (`@MapsId`,
+  unidirectionnelle — `User` ne référence pas `UserProfile` en retour). But :
+  la table qui porte le mot de passe hashé n'est plus requêtée/modifiée à
+  chaque gain de point. `UserProfileRepository` n'a pas de méthode dédiée :
+  `findById(user.getId())` suffit (clé partagée). `Activity`/`Habit`/
+  `AgendaEvent`/`Domaine.creePar`/`ProgressionLog`/`UserBadge` continuent de
+  référencer `User` (ownership/identité, pas des données de jeu).
+- Rôle **`ROLE_ADMIN`** : un seul admin, désormais **persisté**
+  (`users.is_admin`, V16) — initialisé une seule fois à l'inscription par
+  correspondance avec `gamify.admin.email` (`AuthService.register`), plus
+  jamais recalculé au login. `UserDetailsServiceImpl` lit `user.isAdmin()`
+  directement. Écart volontaire vs l'ancien pattern (recalcul à la volée à
+  chaque login, rien en base) : changer `gamify.admin.email` après coup ne
+  déplace plus l'admin automatiquement — pas encore de mécanisme de
+  promotion dédié si plusieurs admins sont nécessaires un jour.
   `/api/backoffice/**` protégé par `hasRole("ADMIN")`
-  (`JsonAccessDeniedHandler` pour un 403 JSON propre). Pattern à réutiliser
-  pour toute future route admin.
+  (`JsonAccessDeniedHandler` pour un 403 JSON propre).
 - Le frontend est en structure feature-first complète : `features/auth`, `profile`,
   `activities` (kanban 3 colonnes drag & drop), `agenda` (vues semaine/jour/mois),
   `habits` (grille type HabitKit), `dashboard` (carte du personnage FIFA-like,

@@ -5,10 +5,12 @@ import com.gamify.application.dtos.profile.ProfileResponse;
 import com.gamify.application.dtos.profile.UpdateProfileRequest;
 import com.gamify.domain.entities.Domaine;
 import com.gamify.domain.entities.User;
+import com.gamify.domain.entities.UserProfile;
 import com.gamify.domain.enums.Attribut;
 import com.gamify.domain.exceptions.DomainException;
 import com.gamify.domain.exceptions.NotFoundException;
 import com.gamify.infrastructure.persistence.DomaineRepository;
+import com.gamify.infrastructure.persistence.UserProfileRepository;
 import com.gamify.infrastructure.persistence.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +45,7 @@ public class ProfileService {
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of("image/png", "image/jpeg");
 
     private final UserRepository userRepository;
+    private final UserProfileRepository userProfileRepository;
     private final DomaineRepository domaineRepository;
 
     @Value("${gamify.uploads.dir}")
@@ -51,29 +54,32 @@ public class ProfileService {
     @Transactional(readOnly = true)
     public ProfileResponse getProfile(String email) {
         User user = findUserByEmail(email);
-        return toProfileResponse(user);
+        UserProfile profile = findProfile(user);
+        return toProfileResponse(user, profile);
     }
 
     @Transactional
     public ProfileResponse updateProfile(String email, UpdateProfileRequest request) {
         User user = findUserByEmail(email);
+        UserProfile profile = findProfile(user);
 
         List<Domaine> domaines = domaineRepository.findAllById(request.domaineIds());
         if (domaines.size() != request.domaineIds().size()) {
             throw new DomainException("Un ou plusieurs domaines sélectionnés sont introuvables");
         }
 
-        user.setAvatar(request.avatar());
-        user.setDomainesTrackes(new HashSet<>(domaines));
-        userRepository.save(user);
+        profile.setAvatar(request.avatar());
+        profile.setDomainesTrackes(new HashSet<>(domaines));
+        userProfileRepository.save(profile);
 
         log.info("Profil mis à jour pour {}", email);
-        return toProfileResponse(user);
+        return toProfileResponse(user, profile);
     }
 
     @Transactional
     public ProfileResponse updateAvatar(String email, MultipartFile file) {
         User user = findUserByEmail(email);
+        UserProfile profile = findProfile(user);
 
         if (file == null || file.isEmpty()) {
             throw new DomainException("Aucun fichier reçu");
@@ -94,13 +100,13 @@ public class ProfileService {
             String fileName = UUID.randomUUID() + ".jpg";
             ImageIO.write(resized, "jpg", avatarsDir.resolve(fileName).toFile());
 
-            deleteOldAvatar(user);
-            user.setAvatarImage("avatars/" + fileName);
-            userRepository.save(user);
+            deleteOldAvatar(profile);
+            profile.setAvatarImage("avatars/" + fileName);
+            userProfileRepository.save(profile);
 
             log.info("Avatar mis à jour pour {} ({}x{} → {}x{})", email,
                     source.getWidth(), source.getHeight(), resized.getWidth(), resized.getHeight());
-            return toProfileResponse(user);
+            return toProfileResponse(user, profile);
         } catch (IOException e) {
             throw new DomainException("Échec de l'enregistrement de l'image");
         }
@@ -124,12 +130,12 @@ public class ProfileService {
         return target;
     }
 
-    private void deleteOldAvatar(User user) {
-        if (user.getAvatarImage() == null) return;
+    private void deleteOldAvatar(UserProfile profile) {
+        if (profile.getAvatarImage() == null) return;
         try {
-            Files.deleteIfExists(Paths.get(uploadsDir).resolve(user.getAvatarImage()));
+            Files.deleteIfExists(Paths.get(uploadsDir).resolve(profile.getAvatarImage()));
         } catch (IOException e) {
-            log.warn("Ancien avatar non supprimé : {}", user.getAvatarImage());
+            log.warn("Ancien avatar non supprimé : {}", profile.getAvatarImage());
         }
     }
 
@@ -138,27 +144,32 @@ public class ProfileService {
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
     }
 
-    private ProfileResponse toProfileResponse(User user) {
-        Set<Domaine> domaines = user.getDomainesTrackes();
+    private UserProfile findProfile(User user) {
+        return userProfileRepository.findById(user.getId())
+                .orElseThrow(() -> new NotFoundException("Profil introuvable"));
+    }
+
+    private ProfileResponse toProfileResponse(User user, UserProfile profile) {
+        Set<Domaine> domaines = profile.getDomainesTrackes();
         List<DomaineResponse> domaineResponses = domaines.stream()
                 .map(this::toDomaineResponse)
                 .collect(Collectors.toList());
 
         Map<Attribut, Integer> attributs = new EnumMap<>(Attribut.class);
         for (Attribut attribut : Attribut.values()) {
-            attributs.put(attribut, user.getValeurAttribut(attribut));
+            attributs.put(attribut, profile.getValeurAttribut(attribut));
         }
 
         return new ProfileResponse(
                 user.getUsername(),
                 user.getEmail(),
-                user.getAvatar(),
-                user.getAvatarImage() != null ? "/uploads/" + user.getAvatarImage() : null,
+                profile.getAvatar(),
+                profile.getAvatarImage() != null ? "/uploads/" + profile.getAvatarImage() : null,
                 domaineResponses,
-                user.getNiveau(),
-                user.getTitre(),
-                user.getXpTotal(),
-                User.seuilXpPourNiveau(user.getNiveau() + 1),
+                profile.getNiveau(),
+                profile.getTitre(),
+                profile.getXpTotal(),
+                UserProfile.seuilXpPourNiveau(profile.getNiveau() + 1),
                 attributs
         );
     }
