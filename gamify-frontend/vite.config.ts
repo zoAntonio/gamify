@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { fileURLToPath, URL } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -10,5 +11,14 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
+  },
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    globals: false,
+    // Le pool "forks" (défaut) time out en environnement sandboxé (spawn de
+    // process enfant restreint) — "threads" fonctionne identiquement ici comme
+    // sur un runner CI classique.
+    pool: 'threads',
   },
 })

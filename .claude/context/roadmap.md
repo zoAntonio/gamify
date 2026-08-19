@@ -30,6 +30,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
 | G1-T09 | 🔶 Partiel | 2026-07-17 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`, hauteur bornée + scroll interne pour le paysage mobile). Responsive : rail horizontal à snap (une colonne ≈ 85% de l'écran) sous `md`, grille 3 colonnes au-dessus ; `viewport-fit=cover` ajouté pour les écrans à encoche. Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). Toujours **pas d'UI de filtres/tri** ni de ratio réalisé/objectif. |
 | G2-T15 | 🔶 Partiel | 2026-08-19 | Backoffice admin livré (périmètre plus large que le seul ticket, voir écarts) : CRUD domaines système (créer/modifier/désactiver), catalogue de badges Bronze/Argent/Or par domaine (CRUD complet), saisons (créer/clôturer, une seule active à la fois — fenêtre de comptage des badges), classement/stats utilisateurs (lecture seule, tri XP/niveau). Déblocage auto de badges branché dans `ActivityService`/`HabitService`. Rôle `ROLE_ADMIN` unique désigné par email (`gamify.admin.email`), `/api/backoffice/**` protégé, garde `RequireAdmin` côté front. Manque pour clore G2-T15 : animations/notifications de déblocage, galerie de badges côté joueur (`GET /api/badges/me` existe côté API, aucune UI ne l'appelle). |
+| — (tests) | ✅ Fait | 2026-08-19 | Dette technique "aucun test automatisé" comblée pour son périmètre minimal : JUnit backend (`UserProfileTest` — `ajouterXp`/`seuilXpPourNiveau` ; `HabitServiceTest` — streak courant, bonus 7 jours, recalcul de `meilleurStreak` après `annuler` ; `StatsServiceTest` — agrégation `progression`/`journalDuJour`), Vitest frontend (`useHabits.test.ts` — chargement, `toggleHabit` succès/échec avec rollback optimiste, garde "déjà fait aujourd'hui"), CI GitHub Actions minimale (`.github/workflows/ci.yml`, 2 jobs `backend-tests`/`frontend-tests`, déclenchée sur chaque PR + push `main`). |
 | — (sécu) | ✅ Fait | 2026-08-19 | Séparation `User` (credentials : id/username/email/password/is_admin/audit) / `UserProfile` (données de jeu : attributs RPG, xp/niveau/titre, avatar, domaines trackés) — relation 1-1 à clé partagée `@MapsId`, unidirectionnelle. Objectif : la table qui porte le mot de passe hashé n'est plus requêtée/modifiée à chaque gain de point. Migrations `V15` (split + copie des données existantes) et `V16` (colonne `is_admin` persistée, backfillée pour `admin@admin.com`). Services mis à jour : `AuthService`, `ProfileService`, `ActivityService`, `HabitService`, `AdminUserService`, `UserDetailsServiceImpl`. Vérifié par appels HTTP réels (register/login dont l'admin de test, `GET`/`PUT /api/profile`, validation d'activité, check d'habitude, classement admin) après migration sur DB locale existante (comptes pré-existants conservés, ex. `demo` niveau 3/330 XP toujours correct après migration). |
 
 **Écarts/dette introduits par la séparation credentials/profil (— (sécu)), notés consciemment :**
@@ -281,6 +282,53 @@ qu'un ticket passe la checklist de validation — pas avant.
 - Toujours aucun test automatisé (`UserProfile.appliquerMalusInactivite`/
   `InactivityPenaltyService` seraient de bons premiers candidats JUnit, la
   logique de rattrapage jour par jour étant la plus sensible aux erreurs).
+
+**Écarts/dette introduits par les premiers tests automatisés (— (tests), 2026-08-19) :**
+- Périmètre volontairement limité aux 4 critères d'acceptation du ticket, pas une
+  suite exhaustive : `ActivityService`, `AuthService`, `ProfileService`,
+  `AdminUserService`, `InactivityPenaltyService`/`UserProfile.appliquerMalusInactivite`
+  (déjà signalés comme bons candidats dans les entrées précédentes de ce journal)
+  restent sans test — dette non aggravée mais pas résorbée non plus.
+- Le ticket nommait "`User.ajouterXp`" ; cette logique vit en réalité sur
+  `UserProfile.ajouterXp` depuis la séparation credentials/profil (V15/V16) — testée
+  là où elle vit réellement (`UserProfileTest`), écart de nommage noté dans la Javadoc
+  du test plutôt que silencieux.
+- Tests backend = unitaires purs (JUnit 5 + Mockito + AssertJ, `MockitoExtension`,
+  aucun `@SpringBootTest`/Testcontainers/DB) — cohérent avec la cible "70% unitaires"
+  de la convention et garde la CI simple (pas de service PostgreSQL à provisionner).
+  Pas encore de test d'intégration réel (Flyway + `ddl-auto=validate` sur une vraie
+  base) dans la CI — seule la compilation + les tests unitaires y tournent.
+- `HabitServiceTest` couvre le recalcul de `meilleurStreak` après annulation
+  (`computeMeilleurStreakHistorique`, privée) uniquement **indirectement** via
+  `annuler()`, faute d'accès direct à la méthode privée — choix assumé, cohérent avec
+  "tester le comportement public, pas l'implémentation".
+- Frontend : `useHabits` choisi plutôt que `useActivities` (critère "au moins un des
+  deux") car plus riche à tester (mutation optimiste + rollback via `runOptimistic`).
+  `useActivities` reste sans test — même dette que le reste des hooks/composants.
+- Premières dépendances de test installées côté frontend (`vitest`,
+  `@testing-library/react`, `@testing-library/jest-dom`, `jsdom`), config Vitest ajoutée
+  dans `vite.config.ts` (`test: {...}`, setup global `src/test/setup.ts` pour les
+  matchers jest-dom — dossier transverse au sens de frontend-workflow.md, pas propre à
+  une feature). **Pool forcé sur `threads`** (`test.pool: 'threads'`) : le pool par
+  défaut (`forks`) time out par manque de spawn de process enfant dans l'environnement
+  sandboxé où ce ticket a été développé ; `threads` fonctionne identiquement en local et
+  sur un runner CI classique (Linux non restreint) — à surveiller si un comportement
+  diffère un jour entre les deux.
+- `npm install` a fait remonter 4 vulnérabilités **high** préexistantes via `npm audit`
+  (`nanoid`/`postcss`, transitives de la chaîne d'outils de test ; `react-router-dom`,
+  déjà en dépendance de prod, sans lien avec ce ticket) — non corrigées ici
+  (`npm audit fix` bumperait `react-router-dom` sans rapport avec les tests/CI, hors
+  scope, à traiter séparément si jugé prioritaire).
+- Bit exécutable de `gamify-backend/mvnw` corrigé dans l'index git (`100644` →
+  `100755`, perdu probablement lors d'un commit fait depuis Windows) : sans ça, le job
+  `backend-tests` de la CI (runner Linux) aurait échoué en "Permission denied" sur
+  `./mvnw`.
+- Vérifié : `mvnw test` (21 tests, 3 classes) et `npm test` (5 tests) passent en local,
+  `tsc -b`/`oxlint`/`npm run build` toujours propres côté frontend. La CI elle-même
+  (`.github/workflows/ci.yml`) n'a **pas** été vérifiée en la faisant tourner
+  réellement sur GitHub (pas de push effectué dans cette session) — seule sa
+  cohérence avec les commandes locales validées est garantie ; à confirmer au premier
+  push/PR réel.
 
 ## Dette technique connue
 

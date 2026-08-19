@@ -131,9 +131,19 @@ Points non négociables (grille de revue P0, cf. documents) :
 - Dette courante et écarts assumés : voir la section "Suivi d'avancement" et les
   blocs "Écarts/dette" de [.claude/context/roadmap.md](.claude/context/roadmap.md)
   — c'est la source de vérité, tenue à jour à chaque feature.
-- Aucun test automatisé n'existe encore (ni JUnit côté backend, ni Vitest côté
-  frontend) ; la vérification se fait par compilation + appels HTTP réels (curl),
-  le parcours navigateur restant manuel (pas d'outil d'automatisation ici).
+- Premiers tests automatisés en place (périmètre volontairement limité, voir
+  roadmap.md "— (tests)") : JUnit backend (`gamify-backend/src/test/java/...`,
+  JUnit 5 + Mockito + AssertJ déjà fournis par `spring-boot-starter-test`, aucune
+  dépendance à ajouter) sur `UserProfile.ajouterXp`/seuils de niveaux, streak et
+  recalcul de `meilleurStreak` de `HabitService`, agrégation de `StatsService`.
+  Vitest + Testing Library côté frontend (nouvelle dépendance, `npm test` /
+  `vitest run`, config dans `vite.config.ts` sous la clé `test`, setup global
+  `src/test/setup.ts`) sur `useHabits`. CI GitHub Actions minimale
+  (`.github/workflows/ci.yml`) qui fait tourner ces deux suites sur chaque PR
+  (+ push `main`). Le reste des services (`ActivityService`, `AuthService`,
+  `InactivityPenaltyService`...) et hooks (`useActivities`...) n'a toujours pas
+  de test — la vérification manuelle par compilation + appels HTTP réels (curl) +
+  parcours navigateur manuel reste la norme pour ce qui n'est pas encore couvert.
 
 Signaler si un ticket touche du code existant non conforme, pour décider au cas
 par cas de le remettre aux normes.
