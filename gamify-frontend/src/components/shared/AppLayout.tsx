@@ -2,12 +2,20 @@ import { useState } from 'react';
 import type { FC } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from '@/components/shared/Sidebar';
+import { NotificationCenter } from '@/features/notifications/components/NotificationCenter';
+import { useNotificationEngine } from '@/features/notifications/hooks/useNotificationEngine';
 
 export const AppLayout: FC = () => {
   const [isMobileNavOpen, setMobileNavOpen] = useState(false);
 
+  // AppLayout n'est monté que sous ProtectedRoute (voir AppRouter) : un
+  // utilisateur authentifié est toujours présent ici, le moteur peut donc
+  // tourner sans condition supplémentaire.
+  useNotificationEngine(true);
+
   return (
     <div className="flex min-h-svh text-text">
+      <NotificationCenter />
       <Sidebar isOpen={isMobileNavOpen} onClose={() => setMobileNavOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col">
