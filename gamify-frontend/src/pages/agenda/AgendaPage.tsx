@@ -127,6 +127,19 @@ export const AgendaPage: FC = () => {
     );
   };
 
+  const handleEventResize = (resized: AgendaEvent, newDateFin: string) => {
+    runAction(
+      () =>
+        agendaService.updateEvent(resized.id, {
+          titre: resized.titre,
+          dateDebut: resized.dateDebut,
+          dateFin: newDateFin,
+          ...(resized.activityId !== null ? { activityId: resized.activityId } : {}),
+        }),
+      false,
+    );
+  };
+
   const openCreate = (day: Date, hour: number) =>
     setModal({ date: toIsoDate(day), startTime: `${String(hour).padStart(2, '0')}:00` });
 
@@ -163,6 +176,7 @@ export const AgendaPage: FC = () => {
             })
           }
           onEventDrop={handleEventDrop}
+          onEventResize={handleEventResize}
         />
       )}
 

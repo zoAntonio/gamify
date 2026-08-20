@@ -26,7 +26,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G1-T04 | ✅ Fait | 2026-08-19 | Volet malus complété : `UserProfile.appliquerMalusInactivite` applique −2/jour sans gain (−3 pour PRE), plancher 0, +−5 cumulé exactement au 3ᵉ jour consécutif de manque (compteur par attribut, remis à 0 dès qu'un gain a lieu). Job `InactivityPenaltyService` (par jour, par profil, idempotent via `derniereEvaluationPenalites`), déclenché à minuit par `InactivityPenaltyScheduler` (`@EnableScheduling`) et manuellement via `POST /api/backoffice/penalites/executer` (admin, rattrapage + tests). Chaque malus historisé dans `ProgressionLog` (delta négatif, daté du jour évalué). Migration V17. |
 | G1-T06 | ✅ Fait | 2026-08-20 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Volet restant (affichage des pertes issues du malus G1-T04) complété : `JournalDuJour` colorait déjà les entrées négatives en rouge/positives en vert depuis sa création (rien à faire) ; `ProgressionChart` (graphique "XP gagnés") devient un diagramme en barres divergentes — XP gagné (violet) vers le haut, points d'attributs perdus par malus (rouge, nouveau champ `pertesAttributs`) vers le bas d'une ligne zéro, chaque barre légendée par sa valeur (échelles indépendantes, l'XP n'étant jamais touchée par un malus — voir écart ci-dessous). Pas d'animation/tremblement (reste le périmètre G1-T14 "animations gain/pénalité"). |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
-| G1-T10 | ✅ Fait | 2026-08-20 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. **Récurrence ajoutée (2026-08-20)** : occurrences matérialisées (`serie_id` partagé, migration V18), fréquence quotidien/hebdomadaire (jours de semaine)/mensuel, date de fin obligatoire (max 1 an), UI "Répéter" à la création, choix "cette occurrence seule" (détachement auto de la série) vs "toute la série" à l'édition/suppression. Reste : pas de resize par poignée (toujours hors scope, non demandé par ce ticket). |
+| G1-T10 | ✅ Fait | 2026-08-20 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. **Récurrence ajoutée** : occurrences matérialisées (`serie_id` partagé, migration V18), fréquence quotidien/hebdomadaire (jours de semaine)/mensuel, date de fin obligatoire (max 1 an), UI "Répéter" à la création, choix "cette occurrence seule" (détachement auto de la série) vs "toute la série" à l'édition/suppression. **Resize par poignée ajouté (frontend seulement)** : poignée visible au survol sur le bord bas d'un événement (vues Semaine/Jour), glisser par pointer events (retour visuel continu, pas de DnD natif), granularité 15 min, durée mini 30 min, pas de franchissement de minuit, réutilise `PUT /api/agenda/{id}` tel quel — aucun changement backend pour ce volet. |
 | G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
 | G1-T09 | 🔶 Partiel | 2026-08-20 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`, hauteur bornée + scroll interne pour le paysage mobile). Responsive : rail horizontal à snap (une colonne ≈ 85% de l'écran) sous `md`, grille 3 colonnes au-dessus ; `viewport-fit=cover` ajouté pour les écrans à encoche. Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). **Filtres/tri ajoutés (2026-08-20)** : `ActivityFilters` (Select domaine + Select attribut + Select tri) au-dessus du board, état porté par `useActivityFilters` (query params `domaine`/`attribut`/`sort` via `useSearchParams`, partageable/rafraîchissable), branché sur `useActivities`/`activityService.listActivities`. **Zéro changement backend** : `ActivityController.search` acceptait déjà `domaineId`/`attributCible`/`Pageable`, et Spring Data JPA ajoute l'ORDER BY à partir du `Sort` du `Pageable` même sur une méthode `@Query` — vérifié par appels HTTP réels (curl, compte admin) : filtre domaine, filtre attribut, tri `createdAt` asc/desc, tri `statut` asc/desc, combinaison filtre+tri. Écart assumé : critère d'acceptation d'origine "tri par échéance" **non fait** — `Activity` n'a aucun champ date d'échéance (ni entité, ni DTO), décision utilisateur de ne pas l'ajouter dans ce ticket (voir dette ci-dessous). Toujours pas de ratio réalisé/objectif. |
 | G2-T15 | 🔶 Partiel | 2026-08-19 | Backoffice admin livré (périmètre plus large que le seul ticket, voir écarts) : CRUD domaines système (créer/modifier/désactiver), catalogue de badges Bronze/Argent/Or par domaine (CRUD complet), saisons (créer/clôturer, une seule active à la fois — fenêtre de comptage des badges), classement/stats utilisateurs (lecture seule, tri XP/niveau). Déblocage auto de badges branché dans `ActivityService`/`HabitService`. Rôle `ROLE_ADMIN` unique désigné par email (`gamify.admin.email`), `/api/backoffice/**` protégé, garde `RequireAdmin` côté front. Manque pour clore G2-T15 : animations/notifications de déblocage, galerie de badges côté joueur (`GET /api/badges/me` existe côté API, aucune UI ne l'appelle). |
@@ -109,8 +109,9 @@ qu'un ticket passe la checklist de validation — pas avant.
 - Habitudes : décocher est maintenant possible (voir écarts du 2026-07-26
   ci-dessous) ; pas d'édition/suppression de l'habitude elle-même (suppression =
   action destructive à confirmer, v2).
-- Agenda : pas de récurrence, pas de resize par poignée, drag 1h de granularité,
-  chevauchement d'événements non géré visuellement (ils se superposent).
+- Agenda : pas de récurrence (~~pas de resize par poignée~~ résolu 2026-08-20,
+  voir écart dédié), drag 1h de granularité, chevauchement d'événements non géré
+  visuellement (ils se superposent).
 - Toujours aucun test automatisé (le calcul de streak de `HabitService` serait
   le premier bon candidat JUnit).
 
@@ -259,6 +260,46 @@ qu'un ticket passe la checklist de validation — pas avant.
 - Comptes de test (`agendarec_*@test.com`, `agendarec2_*@test.com`) et leurs
   événements laissés en base locale (même pratique que les comptes jetables
   des tickets précédents) — à nettoyer si la base doit rester propre.
+
+**Écarts/dette introduits par le resize par poignée G1-T10 (2026-08-20, frontend seulement) :**
+- Une seule poignée, bord bas uniquement (étire/raccourcit la fin, le début ne
+  bouge jamais) — l'AC parle d'"une poignée" au singulier, décision assumée de
+  ne pas ajouter de poignée haute symétrique dans ce ticket.
+- Implémenté en pointer events (`onPointerDown`/`window.addEventListener`
+  pointermove/pointerup) plutôt qu'en drag & drop HTML5 natif comme le
+  déplacement existant : le DnD natif ne donne pas de retour visuel continu
+  pendant le geste sans dessiner sa propre image de drag, alors que les pointer
+  events permettent un aperçu en direct de la nouvelle hauteur pendant qu'on
+  tire. La poignée porte `draggable={false}` pour ne pas déclencher le DnD natif
+  du bouton parent (technique standard pour exclure une zone d'un ancêtre
+  draggable).
+- Granularité 15 min (plus fine que le déplacement à 1h, autorisé par l'AC
+  "1h, ou plus fin si voulu"), durée minimale 30 min, pas de franchissement de
+  minuit (23:59 max) — mêmes limites que le reste de l'agenda (pas de support
+  multi-jour).
+- Même limite déjà connue que le drag & drop existant : **pas de support
+  tactile** (pointer events couvrent la souris, mais l'absence de `:hover` sur
+  tactile masque la poignée) — cohérent avec le fallback boutons déjà en place
+  ailleurs (kanban), à revoir pour Capacitor.
+- Aucun changement backend (ticket explicitement frontend seulement) : réutilise
+  `agendaService.updateEvent`/`PUT /api/agenda/{id}` tel quel, déjà vérifié par
+  HTTP réel sur les tickets agenda précédents.
+- Vérifié : `tsc -b`, `oxlint`, `npm run build`, `npm test` (5 tests) propres.
+  **Pas de parcours navigateur réel** (même limite d'environnement que toute la
+  feature agenda, pas d'outil d'automatisation navigateur ici) — le geste de
+  redimensionnement en lui-même (tirer la poignée à la souris) est justement ce
+  qui reste à valider manuellement par l'utilisateur.
+- **Point notable, sans lien avec ce ticket, résolu depuis** : au moment
+  d'écrire ce ticket, l'implémentation de la récurrence (migration V18,
+  `serie_id`, endpoints `/serie`...) semblait avoir disparu du disque (working
+  tree revenu à l'état du commit `d6acb39`, sans trace des fichiers créés) —
+  signalé à l'utilisateur plutôt que reconstruit en silence. Il s'agissait en
+  réalité d'un conflit de `git stash pop` sur `roadmap.md`/`CLAUDE.md` (pas un
+  vrai merge Git — marqueurs "Updated upstream"/"Stashed changes"), le code de
+  la récurrence lui-même ayant déjà été committé et mergé via la PR #38
+  (`1437fb1`/`d942aec`) avant ce ticket. Les deux jeux de changements
+  documentaires (récurrence + resize) sont fusionnés ci-dessus plutôt que l'un
+  écrasant l'autre.
 
 **Écarts/dette introduits par le backoffice admin G2-T15 (2026-08-19) :**
 - Périmètre livré plus large que G2-T15 seul : CRUD domaines système et

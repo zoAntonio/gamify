@@ -38,3 +38,7 @@ export const formatTime = (iso: string): string => iso.slice(11, 16);
 /** Minutes écoulées depuis minuit pour un LocalDateTime ISO. */
 export const minutesOfDay = (iso: string): number =>
   Number(iso.slice(11, 13)) * 60 + Number(iso.slice(14, 16));
+
+/** Inverse de minutesOfDay : minutes écoulées depuis minuit → "HH:mm:00". */
+export const minutesToTime = (minutes: number): string =>
+  `${pad(Math.floor(minutes / 60))}:${pad(minutes % 60)}:00`;

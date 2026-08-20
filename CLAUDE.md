@@ -127,7 +127,9 @@ Points non négociables (grille de revue P0, cf. documents) :
   filtre/tri partageable en URL, cf. tableau state management du doc de
   convention), `agenda` (vues semaine/jour/mois, événements récurrents —
   option "Répéter" à la création, choix "cette occurrence"/"toute la série"
-  à l'édition/suppression d'une occurrence récurrente),
+  à l'édition/suppression d'une occurrence récurrente ; redimensionnement d'un
+  événement par poignée sur le bord bas en vues Semaine/Jour — pointer events,
+  pas de DnD natif, granularité 15 min),
   `habits` (grille type HabitKit), `dashboard` (carte du personnage FIFA-like,
   radar/barres d'attributs SVG faits main, XP par période, journal),
   `backoffice/{domaines,users,saisons,badges}` (pages `/admin/*`, garde de
