@@ -38,3 +38,10 @@ export interface PageResponse<T> {
   number: number;
   size: number;
 }
+
+// "échéance" volontairement absent : Activity n'a pas de champ date d'échéance
+// (voir roadmap.md, dette G1-T09) — seuls createdAt/statut sont triables.
+export type ActivitySortBy = 'createdAt' | 'statut';
+export type SortDirection = 'asc' | 'desc';
+// Combinaisons exposées à l'utilisateur ; '' = pas de tri (ordre naturel backend).
+export type ActivitySort = `${ActivitySortBy},${SortDirection}` | '';

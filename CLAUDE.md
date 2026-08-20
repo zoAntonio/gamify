@@ -119,7 +119,11 @@ Points non négociables (grille de revue P0, cf. documents) :
   `/api/backoffice/**` protégé par `hasRole("ADMIN")`
   (`JsonAccessDeniedHandler` pour un 403 JSON propre).
 - Le frontend est en structure feature-first complète : `features/auth`, `profile`,
-  `activities` (kanban 3 colonnes drag & drop), `agenda` (vues semaine/jour/mois),
+  `activities` (kanban 3 colonnes drag & drop, **filtres domaine/attribut +
+  tri persistés en query params** — `useActivityFilters`, premier usage de
+  `useSearchParams` dans le repo, patron à réutiliser pour tout futur
+  filtre/tri partageable en URL, cf. tableau state management du doc de
+  convention), `agenda` (vues semaine/jour/mois),
   `habits` (grille type HabitKit), `dashboard` (carte du personnage FIFA-like,
   radar/barres d'attributs SVG faits main, XP par période, journal),
   `backoffice/{domaines,users,saisons,badges}` (pages `/admin/*`, garde de

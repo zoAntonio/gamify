@@ -4,9 +4,11 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useActivities } from '@/features/activities/hooks/useActivities';
+import { useActivityFilters } from '@/features/activities/hooks/useActivityFilters';
 import { activityService } from '@/features/activities/services/activityService';
 import { ActivityForm } from '@/features/activities/components/ActivityForm';
 import { ActivityCard } from '@/features/activities/components/ActivityCard';
+import { ActivityFilters } from '@/features/activities/components/ActivityFilters';
 import { KanbanColumn } from '@/features/activities/components/KanbanColumn';
 import type { ActivityRequest, StatutKanban } from '@/features/activities/types/activity.types';
 
@@ -17,7 +19,12 @@ const COLUMNS: { statut: StatutKanban; title: string }[] = [
 ];
 
 export const ActivityListPage: FC = () => {
-  const { activities, isLoading, error, refetch, changerStatutOptimistic } = useActivities();
+  const filters = useActivityFilters();
+  const { activities, isLoading, error, refetch, changerStatutOptimistic } = useActivities({
+    domaineId: filters.domaineId,
+    attributCible: filters.attributCible,
+    sort: filters.sort || undefined,
+  });
   const [isModalOpen, setModalOpen] = useState(false);
   const [isCreating, setCreating] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
@@ -61,6 +68,17 @@ export const ActivityListPage: FC = () => {
           + Nouvelle tâche
         </Button>
       </div>
+
+      <ActivityFilters
+        domaineId={filters.domaineId}
+        attributCible={filters.attributCible}
+        sort={filters.sort}
+        hasActiveFilters={filters.hasActiveFilters}
+        onDomaineChange={filters.setDomaineId}
+        onAttributChange={filters.setAttributCible}
+        onSortChange={filters.setSort}
+        onReset={filters.resetFilters}
+      />
 
       {actionError && !isModalOpen && <p className="text-[15px] text-danger">{actionError}</p>}
       {error && <p className="text-[15px] text-danger">{error.message}</p>}
