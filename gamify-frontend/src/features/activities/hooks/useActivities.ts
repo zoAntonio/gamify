@@ -3,6 +3,12 @@ import { activityService } from '@/features/activities/services/activityService'
 import { runOptimistic } from '@/utils/optimistic';
 import type { Activity, PageResponse, StatutKanban } from '@/features/activities/types/activity.types';
 
+interface UseActivitiesFilters {
+  domaineId?: number | null;
+  attributCible?: string | null;
+  sort?: string | undefined;
+}
+
 interface UseActivitiesReturn {
   activities: Activity[];
   isLoading: boolean;
@@ -11,7 +17,8 @@ interface UseActivitiesReturn {
   changerStatutOptimistic: (id: number, statut: StatutKanban) => Promise<Error | null>;
 }
 
-export const useActivities = (): UseActivitiesReturn => {
+export const useActivities = (filters: UseActivitiesFilters = {}): UseActivitiesReturn => {
+  const { domaineId, attributCible, sort } = filters;
   const [page, setPage] = useState<PageResponse<Activity> | null>(null);
   const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -26,7 +33,12 @@ export const useActivities = (): UseActivitiesReturn => {
       try {
         setLoading(true);
         // Le board kanban affiche tout d'un coup — taille large plutôt que pagination UI.
-        const data = await activityService.listActivities({ size: 100 });
+        const data = await activityService.listActivities({
+          size: 100,
+          ...(domaineId != null ? { domaineId } : {}),
+          ...(attributCible ? { attributCible } : {}),
+          ...(sort ? { sort } : {}),
+        });
         if (!cancelled) setPage(data);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err : new Error('Erreur inconnue'));
@@ -39,7 +51,7 @@ export const useActivities = (): UseActivitiesReturn => {
     return () => {
       cancelled = true;
     };
-  }, [refetchToken]);
+  }, [refetchToken, domaineId, attributCible, sort]);
 
   // Optimistic UI : la carte saute de colonne immédiatement, rollback si l'appel échoue.
   const changerStatutOptimistic = useCallback(

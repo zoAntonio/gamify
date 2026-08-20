@@ -11,6 +11,7 @@ interface ListActivitiesParams {
   domaineId?: number;
   attributCible?: string;
   statut?: string;
+  sort?: string;
   page?: number;
   size?: number;
 }
@@ -25,6 +26,9 @@ export const activityService = {
     if (params.domaineId !== undefined) query.set('domaineId', String(params.domaineId));
     if (params.attributCible) query.set('attributCible', params.attributCible);
     if (params.statut) query.set('statut', params.statut);
+    // Format Spring "sort=propriete,direction" — ActivityRepository.search accepte
+    // déjà un Pageable, aucun changement backend requis (append ORDER BY automatique).
+    if (params.sort) query.set('sort', params.sort);
     query.set('page', String(params.page ?? 0));
     query.set('size', String(params.size ?? 20));
 
