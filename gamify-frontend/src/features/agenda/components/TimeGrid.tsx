@@ -10,6 +10,7 @@ interface TimeGridProps {
   onSlotClick: (day: Date, hour: number) => void;
   onEventClick: (event: AgendaEvent) => void;
   onEventDrop: (eventId: number, day: Date, hour: number) => void;
+  onEventResize: (event: AgendaEvent, newDateFin: string) => void;
 }
 
 const HOUR_HEIGHT = 48;
@@ -22,6 +23,7 @@ export const TimeGrid: FC<TimeGridProps> = ({
   onSlotClick,
   onEventClick,
   onEventDrop,
+  onEventResize,
 }) => {
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
   const now = new Date();
@@ -99,6 +101,7 @@ export const TimeGrid: FC<TimeGridProps> = ({
                     event={item}
                     hourHeight={HOUR_HEIGHT}
                     onClick={onEventClick}
+                    onResize={onEventResize}
                   />
                 ))}
 
