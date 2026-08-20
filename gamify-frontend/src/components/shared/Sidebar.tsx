@@ -18,6 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/agenda', label: 'Agenda' },
   { to: '/habits', label: 'Habitudes' },
   { to: '/onboarding', label: 'Profil' },
+  { to: '/settings/notifications', label: 'Notifications' },
 ];
 
 const ADMIN_NAV_ITEMS: NavItem[] = [

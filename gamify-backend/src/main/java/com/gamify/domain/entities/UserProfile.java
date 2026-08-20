@@ -105,6 +105,15 @@ public class UserProfile {
     // en avançant d'un jour à la fois depuis cette date.
     private LocalDate derniereEvaluationPenalites = LocalDate.now();
 
+    // Réglages notifications (G1-T12, domain.md "Notifications") : 3 catégories
+    // activables/désactivables indépendamment. Le déclenchement effectif (rappel
+    // 30 min avant, alerte 22h, célébration) est calculé côté frontend — ces 3
+    // interrupteurs ne font que gagner/couper chaque catégorie, lus par
+    // NotificationPreferencesService.
+    private boolean notifRappelActif = true;
+    private boolean notifFinJourneeActif = true;
+    private boolean notifCelebrationActif = true;
+
     // Progression
     private int xpTotal = 0;
     private int niveau = 1;

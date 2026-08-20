@@ -32,6 +32,8 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G2-T15 | 🔶 Partiel | 2026-08-19 | Backoffice admin livré (périmètre plus large que le seul ticket, voir écarts) : CRUD domaines système (créer/modifier/désactiver), catalogue de badges Bronze/Argent/Or par domaine (CRUD complet), saisons (créer/clôturer, une seule active à la fois — fenêtre de comptage des badges), classement/stats utilisateurs (lecture seule, tri XP/niveau). Déblocage auto de badges branché dans `ActivityService`/`HabitService`. Rôle `ROLE_ADMIN` unique désigné par email (`gamify.admin.email`), `/api/backoffice/**` protégé, garde `RequireAdmin` côté front. Manque pour clore G2-T15 : animations/notifications de déblocage, galerie de badges côté joueur (`GET /api/badges/me` existe côté API, aucune UI ne l'appelle). |
 | — (tests) | ✅ Fait | 2026-08-19 | Dette technique "aucun test automatisé" comblée pour son périmètre minimal : JUnit backend (`UserProfileTest` — `ajouterXp`/`seuilXpPourNiveau` ; `HabitServiceTest` — streak courant, bonus 7 jours, recalcul de `meilleurStreak` après `annuler` ; `StatsServiceTest` — agrégation `progression`/`journalDuJour`), Vitest frontend (`useHabits.test.ts` — chargement, `toggleHabit` succès/échec avec rollback optimiste, garde "déjà fait aujourd'hui"), CI GitHub Actions minimale (`.github/workflows/ci.yml`, 2 jobs `backend-tests`/`frontend-tests`, déclenchée sur chaque PR + push `main`). |
 | — (sécu) | ✅ Fait | 2026-08-19 | Séparation `User` (credentials : id/username/email/password/is_admin/audit) / `UserProfile` (données de jeu : attributs RPG, xp/niveau/titre, avatar, domaines trackés) — relation 1-1 à clé partagée `@MapsId`, unidirectionnelle. Objectif : la table qui porte le mot de passe hashé n'est plus requêtée/modifiée à chaque gain de point. Migrations `V15` (split + copie des données existantes) et `V16` (colonne `is_admin` persistée, backfillée pour `admin@admin.com`). Services mis à jour : `AuthService`, `ProfileService`, `ActivityService`, `HabitService`, `AdminUserService`, `UserDetailsServiceImpl`. Vérifié par appels HTTP réels (register/login dont l'admin de test, `GET`/`PUT /api/profile`, validation d'activité, check d'habitude, classement admin) après migration sur DB locale existante (comptes pré-existants conservés, ex. `demo` niveau 3/330 XP toujours correct après migration). |
+| G1-T12 | ✅ Fait | 2026-08-20 | Notifications : réglages utilisateur (3 catégories activables/désactivables — `/settings/notifications`, nav Sidebar "Notifications") + rappel ~30 min avant un événement d'agenda, alerte ~22h si des tâches du jour restent non validées, célébration niveau/badge. **Mécanisme retenu (décision prise pour ce ticket, voir écarts ci-dessous)** : ni Web Push ni bandeau in-app seul — sondage client (60s) des endpoints déjà existants (`/api/profile`, `/api/badges/me`, `/api/agenda`) depuis `useNotificationEngine` (monté une fois dans `AppLayout`), notification navigateur (`Notification` API) quand la permission est accordée, **toujours** doublée d'un bandeau in-app (`NotificationCenter`/`useNotificationStore`, Zustand) garanti même sans permission. Backend minimal : 3 booléens ajoutés sur `UserProfile` (`notifRappelActif`/`notifFinJourneeActif`/`notifCelebrationActif`, migration V20) plutôt qu'une nouvelle entité, `NotificationPreferencesService`/`Controller` (`GET`/`PUT /api/notification-preferences`) — aucun job planifié, tout le déclenchement est côté frontend. |
+
 
 **Écarts/dette introduits par la séparation credentials/profil (— (sécu)), notés consciemment :**
 - Rôle admin : passage d'un calcul à la volée par email (`gamify.admin.email`,
@@ -524,6 +526,87 @@ qu'un ticket passe la checklist de validation — pas avant.
   l'issue de cette session — écart assumé par rapport à la convention notée
   plus haut, pour que l'utilisateur puisse enchaîner une vérification manuelle
   immédiate sans attendre un redémarrage.
+
+**Écarts/dette introduits par les notifications G1-T12 (2026-08-20) :**
+- **Mécanisme technique tranché avant de commencer, comme demandé par le
+  ticket** : pas de Web Push (VAPID + service worker + abonnements persistés
+  en base + librairie serveur dédiée à ajouter côté Java) — jugé disproportionné
+  pour ce besoin et pour la contrainte "zéro coût" (au sens infra/complexité
+  autant que financier) du projet solo, d'autant que le futur packaging
+  Android (Capacitor, prévu plus tard) aurait de toute façon son propre
+  mécanisme de notifications locales, différent du Web Push. Choix retenu :
+  sondage périodique **côté frontend uniquement** (`useNotificationEngine`,
+  60s, monté une fois dans `AppLayout`) des endpoints déjà existants
+  (`/api/profile`, `/api/badges/me`, `/api/agenda`), affichage via l'API
+  `Notification` du navigateur quand la permission est accordée, **toujours**
+  doublé d'un bandeau in-app (`NotificationCenter`) garanti même sans
+  permission/navigateur non supporté. Conséquence assumée : aucune notification
+  si aucun onglet de l'app n'est ouvert (pas de vrai push) — limite acceptée
+  pour ce mécanisme, à revoir si un jour une vraie appli fermée doit être
+  notifiée (Web Push ou notifications locales Capacitor).
+- **Source de "tâche/événement planifié" = `AgendaEvent`, pas `Activity`** :
+  `Activity` n'a toujours pas de champ date d'échéance (dette déjà connue,
+  voir section dédiée plus bas) — le rappel 30 min et l'alerte 22h ne portent
+  donc que sur les événements d'agenda (libres ou liés à une tâche via
+  `activityId`), pas sur les tâches kanban jamais placées dans l'agenda.
+  Cohérent avec la seule notion de temps qui existe réellement dans le modèle.
+- Alerte fin de journée : compte, à ≥22h, les événements du jour dont
+  `activityId != null && activityStatut !== 'TERMINE'`, sans distinguer passé/
+  futur dans la journée (interprétation de "tâches du jour restent non
+  validées" — non explicite dans le ticket).
+- Célébration : détectée par diff client (niveau via `/api/profile`, ids de
+  `/api/badges/me`) plutôt que par un signal renvoyé directement par les
+  endpoints de validation (`ActivityService`/`HabitService`) — pas de
+  changement backend sur ces services. La base de comparaison est posée
+  silencieusement au premier sondage (pas de "rafale" de célébrations
+  rétroactives à la connexion) puis comparée à chaque sondage suivant.
+- Réglages stockés comme 3 booléens sur `UserProfile` (migration V20,
+  `notif_rappel_actif`/`notif_fin_journee_actif`/`notif_celebration_actif`,
+  activés par défaut) plutôt qu'une nouvelle entité — décision similaire à
+  l'avatar/les domaines trackés déjà sur cette même entité.
+- Précision acceptée : le sondage à 60s introduit jusqu'à ~1 min d'écart sur
+  le rappel "30 min avant" et sur la détection de montée de niveau/badge.
+  Dédoublonnage du rappel gardé en mémoire seulement (`Set` local au hook,
+  perdu au rechargement de page — un rappel peut réapparaître après un
+  reload) alors que l'alerte fin de journée est dédupliquée via
+  `localStorage` par utilisateur (`gamify-notif-eod-<username>`, une alerte
+  par jour garantie même après reload) — asymétrie assumée, l'alerte fin de
+  journée étant plus susceptible d'être revue après un rechargement en soirée.
+- Aucun test Vitest ajouté sur `useNotificationEngine`/les détecteurs purs de
+  `features/notifications/lib/detectors.ts` (ces derniers seraient de bons
+  candidats, étant des fonctions pures sans effet de bord) — dette assumée,
+  cohérente avec le reste du projet. Côté backend, `NotificationPreferencesServiceTest`
+  couvre lecture/écriture (3 cas).
+- Vérifié : `mvnw compile`/`mvnw test` (36 tests, 4 classes dont la nouvelle)
+  et `tsc -b`/`oxlint`/`npm run build` propres ; `npm test` échoue dans l'outil
+  Bash de cet environnement (pool de threads Vitest qui timeout — limite déjà
+  documentée, voir écarts "— (tests)" plus haut) mais passe bien via PowerShell
+  (5 tests, `useHabits` inchangé). **Parcours navigateur réel effectué** (script
+  Playwright ad hoc, `npx playwright install chromium` a dû re-télécharger un
+  nouveau build ~240 Mo malgré le cache existant — version npm différente de
+  celle utilisée sur le ticket précédent) sur un compte jetable
+  (`notiftest_<timestamp>@test.com`) : `GET /api/notification-preferences`
+  par défaut (3× `true`), `PUT` désactivation partielle (rappel+célébration
+  à `false`) puis `GET` confirmant la persistance, réactivation, création
+  d'un événement d'agenda à +5 min ; page `/settings/notifications` : les 3
+  interrupteurs s'affichent et reflètent l'état serveur, section "Notifications
+  navigateur" affiche correctement "Refusées" (Chromium headless refuse la
+  permission par défaut) sans bouton "Activer" ; navigation vers `/dashboard` :
+  bandeau "Dans 30 minutes — Test rappel notif" apparaît (le moteur sonde
+  immédiatement au montage, pas besoin d'attendre 60s), persiste au changement
+  de page (état global) ; `console --errors` vide sur tout le parcours.
+  Captures d'écran prises aux deux étapes. **Non vérifiées en conditions
+  réelles** (contrainte de session, pas un doute sur le code) : la célébration
+  (aucune montée de niveau/badge déclenchée pendant la session) et l'alerte
+  22h (heure système pendant la session < 22h) — même mécanique de sondage/
+  affichage que le rappel déjà validé bout en bout, donc risque résiduel
+  jugé faible, mais à confirmer manuellement par l'utilisateur.
+- Backend arrêté (2 process Java orphelins d'une session précédente tués) puis
+  relancé pour charger la migration V20, laissé tourner **volontairement** à
+  l'issue de cette session (même choix que G1-T11) pour vérification manuelle
+  immédiate. Compte jetable `notiftest_*@test.com` et son événement d'agenda
+  "Test rappel notif" laissés en base locale (même pratique que les comptes
+  jetables des tickets précédents).
 
 ## Dette technique connue
 

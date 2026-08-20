@@ -101,7 +101,14 @@ Points non négociables (grille de revue P0, cf. documents) :
   job planifié du projet (`@EnableScheduling` + `InactivityPenaltyScheduler`,
   minuit), doublé d'un déclenchement manuel admin
   (`POST /api/backoffice/penalites/executer`, idempotent) pour rattrapage et
-  tests. Migrations jusqu'à **V19**.
+  tests. **Notifications** (G1-T12, domain.md) : réglages 3 booléens sur
+  `UserProfile` (`notifRappelActif`/`notifFinJourneeActif`/`notifCelebrationActif`),
+  exposés par `NotificationPreferencesService`/`Controller`
+  (`GET`/`PUT /api/notification-preferences`) — **aucun déclenchement côté
+  backend** : le rappel 30 min avant un événement d'agenda, l'alerte 22h et la
+  célébration niveau/badge sont entièrement calculés côté frontend par sondage
+  périodique (décision assumée pour la contrainte zéro coût, voir roadmap.md).
+  Migrations jusqu'à **V20**.
 - **`User` (credentials) / `UserProfile` (données de jeu) séparés** (V15/V16) :
   `users` ne porte plus que id/username/email/password/is_admin/audit ; tous
   les attributs RPG, xp/niveau/titre, avatar/avatar_image et domaines trackés
@@ -136,10 +143,15 @@ Points non négociables (grille de revue P0, cf. documents) :
   radar/barres d'attributs SVG faits main, XP par période, journal),
   `backoffice/{domaines,users,saisons,badges}` (pages `/admin/*`, garde de
   route `RequireAdmin`, section "Administration" dans `Sidebar` visible
-  seulement si `isAdmin`). UI générique dans `components/ui/` (`Button`,
-  `Modal`, `Select`, `TextField`, `Pagination`...), thème Tailwind v4 dans
-  `index.css` (tokens couleurs/attributs). `react-router-dom` + `zustand` ;
-  toujours pas de TanStack Query (hooks fetch maison par feature).
+  seulement si `isAdmin`), `notifications` (réglages sur `/settings/notifications`,
+  moteur de détection `useNotificationEngine` monté dans `AppLayout` — sondage
+  60s de `/api/profile`/`/api/badges/me`/`/api/agenda`, notification navigateur
+  + bandeau in-app systématique via `useNotificationStore` (Zustand) et
+  `NotificationCenter`, pas de Web Push — voir roadmap.md G1-T12). UI générique
+  dans `components/ui/` (`Button`, `Modal`, `Select`, `TextField`,
+  `Pagination`...), thème Tailwind v4 dans `index.css` (tokens
+  couleurs/attributs). `react-router-dom` + `zustand` ; toujours pas de
+  TanStack Query (hooks fetch maison par feature).
 - Dette courante et écarts assumés : voir la section "Suivi d'avancement" et les
   blocs "Écarts/dette" de [.claude/context/roadmap.md](.claude/context/roadmap.md)
   — c'est la source de vérité, tenue à jour à chaque feature.
