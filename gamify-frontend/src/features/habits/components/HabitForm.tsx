@@ -6,23 +6,30 @@ import { Button } from '@/components/ui/Button';
 import { Spinner } from '@/components/ui/Spinner';
 import { useHabitDomaines } from '@/features/habits/hooks/useHabitDomaines';
 import type { Attribut } from '@/types/attribut.types';
-import type { HabitRequest } from '@/features/habits/types/habit.types';
+import type { Habit, HabitRequest } from '@/features/habits/types/habit.types';
 
 interface HabitFormProps {
+  /** Présent en édition : préremplit le formulaire et bascule les libellés. */
+  initialValues?: Habit | undefined;
   onSubmit: (request: HabitRequest) => void;
+  /** Présent en édition seulement — affiche le bouton "Supprimer" (modale de détail, G1-T11). */
+  onDelete?: (() => void) | undefined;
   isSubmitting: boolean;
 }
 
 // Presets alignés sur les couleurs d'attributs du thème (index.css).
 const COLOR_PRESETS = ['#663af3', '#3b9dff', '#ff6b5c', '#34d399', '#f6c945', '#ff5c8a', '#45c2d6'];
 
-export const HabitForm: FC<HabitFormProps> = ({ onSubmit, isSubmitting }) => {
+export const HabitForm: FC<HabitFormProps> = ({ initialValues, onSubmit, onDelete, isSubmitting }) => {
   const { domaines, isLoading: isLoadingDomaines } = useHabitDomaines();
-  const [nom, setNom] = useState('');
-  const [domaineId, setDomaineId] = useState('');
-  const [attributCible, setAttributCible] = useState('');
-  const [icone, setIcone] = useState('');
-  const [couleur, setCouleur] = useState<string>(COLOR_PRESETS[0] ?? '#663af3');
+  const isEditing = initialValues !== undefined;
+  const [nom, setNom] = useState(initialValues?.nom ?? '');
+  const [domaineId, setDomaineId] = useState(
+    initialValues?.domaineId != null ? String(initialValues.domaineId) : '',
+  );
+  const [attributCible, setAttributCible] = useState<string>(initialValues?.attributCible ?? '');
+  const [icone, setIcone] = useState(initialValues?.icone ?? '');
+  const [couleur, setCouleur] = useState<string>(initialValues?.couleur ?? COLOR_PRESETS[0] ?? '#663af3');
 
   const selectedDomaine = domaines.find((domaine) => String(domaine.id) === domaineId);
   const attributOptions = selectedDomaine?.attributs ?? [];
@@ -129,9 +136,21 @@ export const HabitForm: FC<HabitFormProps> = ({ onSubmit, isSubmitting }) => {
         </div>
       </fieldset>
 
-      <Button type="submit" isLoading={isSubmitting} disabled={!domaineId || !attributCible}>
-        Créer l’habitude
-      </Button>
+      <div className="mt-1 flex flex-wrap gap-2">
+        {onDelete && (
+          <Button type="button" variant="ghost" className="!text-danger" disabled={isSubmitting} onClick={onDelete}>
+            Supprimer
+          </Button>
+        )}
+        <Button
+          type="submit"
+          fullWidth
+          isLoading={isSubmitting}
+          disabled={!domaineId || !attributCible}
+        >
+          {isEditing ? 'Enregistrer' : 'Créer l’habitude'}
+        </Button>
+      </div>
     </form>
   );
 };

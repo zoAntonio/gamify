@@ -44,4 +44,10 @@ public class Habit extends BaseEntity {
     // Record personnel — conservé séparément du streak courant (domain.md),
     // le streak courant se recalcule depuis les completions.
     private int meilleurStreak = 0;
+
+    // Suppression logique (même patron que Domaine.actif) : HabitCompletion est
+    // append-only, une suppression physique casserait l'historique/les badges déjà
+    // débloqués sur cette habitude. Une habitude désactivée disparaît des listes et
+    // devient inaccessible (check/édition), sans perdre son historique.
+    private boolean actif = true;
 }

@@ -83,7 +83,9 @@ Points non négociables (grille de revue P0, cf. documents) :
   hiérarchie d'exceptions domain, `ApiResponse<T>`, `GlobalExceptionHandler`,
   filtre JWT fonctionnel, Swagger. Features livrées : auth, profil/domaines
   (+ upload de photo d'avatar servie sur `/uploads/**`, public), tâches/kanban
-  (`Activity`, statuts + récompenses), habitudes/streaks (`Habit`/`HabitCompletion`),
+  (`Activity`, statuts + récompenses), habitudes/streaks (`Habit`/`HabitCompletion`,
+  édition et suppression **logique** — `habits.actif`, même patron que
+  `domaines.actif`, voir roadmap.md G1-T11),
   agenda (`AgendaEvent`, occurrences récurrentes matérialisées — `serie_id`,
   fréquence quotidien/hebdomadaire/mensuel, édition/suppression "cette
   occurrence" vs "toute la série", voir roadmap.md G1-T10), stats (`ProgressionLog` historisé à chaque gain,
@@ -99,7 +101,7 @@ Points non négociables (grille de revue P0, cf. documents) :
   job planifié du projet (`@EnableScheduling` + `InactivityPenaltyScheduler`,
   minuit), doublé d'un déclenchement manuel admin
   (`POST /api/backoffice/penalites/executer`, idempotent) pour rattrapage et
-  tests. Migrations jusqu'à **V18**.
+  tests. Migrations jusqu'à **V19**.
 - **`User` (credentials) / `UserProfile` (données de jeu) séparés** (V15/V16) :
   `users` ne porte plus que id/username/email/password/is_admin/audit ; tous
   les attributs RPG, xp/niveau/titre, avatar/avatar_image et domaines trackés

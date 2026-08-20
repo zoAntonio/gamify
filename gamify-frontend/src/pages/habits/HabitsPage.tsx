@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { FC } from 'react';
-import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useHabits } from '@/features/habits/hooks/useHabits';
@@ -8,29 +7,49 @@ import { habitService } from '@/features/habits/services/habitService';
 import { HabitCard } from '@/features/habits/components/HabitCard';
 import { HabitDetailModal } from '@/features/habits/components/HabitDetailModal';
 import { HabitForm } from '@/features/habits/components/HabitForm';
-import type { HabitRequest } from '@/features/habits/types/habit.types';
+import { Button } from '@/components/ui/Button';
+import type { Habit, HabitRequest } from '@/features/habits/types/habit.types';
+
+interface FormModalState {
+  habit?: Habit;
+}
 
 export const HabitsPage: FC = () => {
   const { habits, isLoading, error, refetch, toggleHabit, cancelDay, checkDay } = useHabits();
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [isCreating, setCreating] = useState(false);
+  const [formModal, setFormModal] = useState<FormModalState | null>(null);
+  const [isSubmitting, setSubmitting] = useState(false);
   const [checkingId, setCheckingId] = useState<number | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [detailHabitId, setDetailHabitId] = useState<number | null>(null);
   const detailHabit = habits.find((habit) => habit.id === detailHabitId) ?? null;
 
-  const handleCreate = async (request: HabitRequest) => {
-    setCreating(true);
+  const runAction = async (action: () => Promise<unknown>, closeModal: boolean) => {
+    setSubmitting(true);
     setActionError(null);
     try {
-      await habitService.createHabit(request);
-      setModalOpen(false);
+      await action();
+      if (closeModal) setFormModal(null);
       refetch();
     } catch (err) {
       setActionError(err instanceof Error ? err.message : 'Erreur inconnue');
     } finally {
-      setCreating(false);
+      setSubmitting(false);
     }
+  };
+
+  const handleSubmit = (request: HabitRequest) => {
+    const editing = formModal?.habit;
+    runAction(
+      () => (editing ? habitService.updateHabit(editing.id, request) : habitService.createHabit(request)),
+      true,
+    );
+  };
+
+  const handleDelete = () => {
+    const editing = formModal?.habit;
+    if (!editing) return;
+    if (!window.confirm(`Supprimer l'habitude « ${editing.nom} » ? L'historique déjà acquis est conservé.`)) return;
+    runAction(() => habitService.deleteHabit(editing.id), true);
   };
 
   const handleCheck = async (id: number) => {
@@ -55,6 +74,12 @@ export const HabitsPage: FC = () => {
     if (error) setActionError(error.message);
   };
 
+  const openEdit = (habit: Habit) => {
+    setDetailHabitId(null);
+    setActionError(null);
+    setFormModal({ habit });
+  };
+
   return (
     <section className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -66,12 +91,12 @@ export const HabitsPage: FC = () => {
             Coche tes habitudes chaque jour — 7 jours de série = +10 XP bonus.
           </p>
         </div>
-        <Button type="button" onClick={() => setModalOpen(true)}>
+        <Button type="button" onClick={() => setFormModal({})}>
           + Nouvelle habitude
         </Button>
       </div>
 
-      {actionError && !isModalOpen && <p className="text-[15px] text-danger">{actionError}</p>}
+      {actionError && !formModal && <p className="text-[15px] text-danger">{actionError}</p>}
       {error && <p className="text-[15px] text-danger">{error.message}</p>}
 
       {isLoading && (
@@ -103,9 +128,20 @@ export const HabitsPage: FC = () => {
         </div>
       )}
 
-      <Modal isOpen={isModalOpen} title="Nouvelle habitude" onClose={() => setModalOpen(false)}>
+      <Modal
+        isOpen={formModal !== null}
+        title={formModal?.habit ? 'Modifier l’habitude' : 'Nouvelle habitude'}
+        onClose={() => setFormModal(null)}
+      >
         {actionError && <p className="mb-3 text-[14px] text-danger">{actionError}</p>}
-        <HabitForm onSubmit={handleCreate} isSubmitting={isCreating} />
+        {formModal && (
+          <HabitForm
+            initialValues={formModal.habit}
+            onSubmit={handleSubmit}
+            onDelete={formModal.habit ? handleDelete : undefined}
+            isSubmitting={isSubmitting}
+          />
+        )}
       </Modal>
 
       {detailHabit && (
@@ -114,6 +150,7 @@ export const HabitsPage: FC = () => {
           isOpen
           onClose={() => setDetailHabitId(null)}
           onToggleDate={handleToggleDate}
+          onEdit={openEdit}
         />
       )}
     </section>

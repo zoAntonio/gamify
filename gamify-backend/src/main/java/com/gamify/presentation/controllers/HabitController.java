@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -59,6 +60,29 @@ public class HabitController {
                 habitService.create(authentication.getName(), request),
                 "Habitude créée"
         );
+    }
+
+    @Operation(summary = "Modifier une habitude", description = "Modifie le nom, le domaine, l'attribut ciblé, l'icône et la couleur d'une habitude existante — ne touche pas à l'historique de complétions.")
+    @PutMapping("/{id}")
+    public ApiResponse<HabitResponse> update(
+            Authentication authentication,
+            @Parameter(description = "Identifiant de l'habitude") @PathVariable Long id,
+            @Valid @RequestBody HabitRequest request
+    ) {
+        return ApiResponse.success(
+                habitService.update(authentication.getName(), id, request),
+                "Habitude modifiée"
+        );
+    }
+
+    @Operation(summary = "Supprimer une habitude", description = "Suppression logique : l'habitude disparaît des listes et du check quotidien, son historique de complétions et les badges déjà débloqués restent intacts.")
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> delete(
+            Authentication authentication,
+            @Parameter(description = "Identifiant de l'habitude") @PathVariable Long id
+    ) {
+        habitService.delete(authentication.getName(), id);
+        return ApiResponse.success(null, "Habitude supprimée");
     }
 
     @Operation(summary = "Cocher l'habitude aujourd'hui", description = "Marque l'habitude comme faite aujourd'hui : +1 attribut ciblé, +XP, bonus +10 XP tous les 7 jours de série. Refusé si déjà cochée aujourd'hui.")

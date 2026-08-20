@@ -9,13 +9,15 @@ interface HabitDetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   onToggleDate: (id: number, date: string) => void;
+  /** Ouvre la modale d'édition/suppression pour cette habitude (G1-T11). */
+  onEdit: (habit: Habit) => void;
 }
 
 const WEEKDAY_LABELS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const FALLBACK_COLOR = '#663af3'; // Void Violet — si l'habitude n'a pas de couleur
 
 /** Modale de détail : calendrier mensuel navigable, clic sur une date pour cocher/annuler. */
-export const HabitDetailModal: FC<HabitDetailModalProps> = ({ habit, isOpen, onClose, onToggleDate }) => {
+export const HabitDetailModal: FC<HabitDetailModalProps> = ({ habit, isOpen, onClose, onToggleDate, onEdit }) => {
   const [viewedMonth, setViewedMonth] = useState(() => new Date());
 
   const couleur = habit.couleur ?? FALLBACK_COLOR;
@@ -29,6 +31,16 @@ export const HabitDetailModal: FC<HabitDetailModalProps> = ({ habit, isOpen, onC
 
   return (
     <Modal isOpen={isOpen} title={habit.nom} onClose={onClose}>
+      <div className="flex justify-end pb-1">
+        <button
+          type="button"
+          onClick={() => onEdit(habit)}
+          className="text-[13px] font-medium text-text-muted underline-offset-2 transition-colors hover:text-text hover:underline"
+        >
+          ✎ Modifier
+        </button>
+      </div>
+
       <div className="flex items-center justify-between pb-3">
         <button
           type="button"

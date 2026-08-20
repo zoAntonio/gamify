@@ -27,7 +27,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G1-T06 | ✅ Fait | 2026-08-20 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Volet restant (affichage des pertes issues du malus G1-T04) complété : `JournalDuJour` colorait déjà les entrées négatives en rouge/positives en vert depuis sa création (rien à faire) ; `ProgressionChart` (graphique "XP gagnés") devient un diagramme en barres divergentes — XP gagné (violet) vers le haut, points d'attributs perdus par malus (rouge, nouveau champ `pertesAttributs`) vers le bas d'une ligne zéro, chaque barre légendée par sa valeur (échelles indépendantes, l'XP n'étant jamais touchée par un malus — voir écart ci-dessous). Pas d'animation/tremblement (reste le périmètre G1-T14 "animations gain/pénalité"). |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
 | G1-T10 | ✅ Fait | 2026-08-20 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. **Récurrence ajoutée** : occurrences matérialisées (`serie_id` partagé, migration V18), fréquence quotidien/hebdomadaire (jours de semaine)/mensuel, date de fin obligatoire (max 1 an), UI "Répéter" à la création, choix "cette occurrence seule" (détachement auto de la série) vs "toute la série" à l'édition/suppression. **Resize par poignée ajouté (frontend seulement)** : poignée visible au survol sur le bord bas d'un événement (vues Semaine/Jour), glisser par pointer events (retour visuel continu, pas de DnD natif), granularité 15 min, durée mini 30 min, pas de franchissement de minuit, réutilise `PUT /api/agenda/{id}` tel quel — aucun changement backend pour ce volet. |
-| G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
+| G1-T11 | ✅ Fait | 2026-08-20 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. **Édition/suppression ajoutées (2026-08-20)** : `PUT /api/habits/{id}` (nom/domaine/attribut ciblé/icône/couleur, même règle de cohérence attribut∈domaine qu'à la création) et `DELETE /api/habits/{id}` en **suppression logique** (`habits.actif`, migration V19 — même patron que `domaines.actif`) plutôt que physique, décision actée pour rester cohérent avec `HabitCompletion` déjà append-only : une habitude supprimée disparaît des listes/du check quotidien mais son historique de complétions et les badges déjà débloqués via elle restent intacts ; `findOwnedHabit` filtre aussi `actif`, donc check/annuler/update/delete sur une habitude déjà supprimée renvoient 404. UI : accès depuis la modale de détail existante (lien "✎ Modifier" → modale d'édition réutilisant `HabitForm`, bouton "Supprimer" avec confirmation `window.confirm` avant l'appel réseau — même patron que la suppression d'événement d'agenda G1-T10). Reste : notifications (G1-T12, ticket séparé). |
 | G1-T09 | 🔶 Partiel | 2026-08-20 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`, hauteur bornée + scroll interne pour le paysage mobile). Responsive : rail horizontal à snap (une colonne ≈ 85% de l'écran) sous `md`, grille 3 colonnes au-dessus ; `viewport-fit=cover` ajouté pour les écrans à encoche. Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). **Filtres/tri ajoutés (2026-08-20)** : `ActivityFilters` (Select domaine + Select attribut + Select tri) au-dessus du board, état porté par `useActivityFilters` (query params `domaine`/`attribut`/`sort` via `useSearchParams`, partageable/rafraîchissable), branché sur `useActivities`/`activityService.listActivities`. **Zéro changement backend** : `ActivityController.search` acceptait déjà `domaineId`/`attributCible`/`Pageable`, et Spring Data JPA ajoute l'ORDER BY à partir du `Sort` du `Pageable` même sur une méthode `@Query` — vérifié par appels HTTP réels (curl, compte admin) : filtre domaine, filtre attribut, tri `createdAt` asc/desc, tri `statut` asc/desc, combinaison filtre+tri. Écart assumé : critère d'acceptation d'origine "tri par échéance" **non fait** — `Activity` n'a aucun champ date d'échéance (ni entité, ni DTO), décision utilisateur de ne pas l'ajouter dans ce ticket (voir dette ci-dessous). Toujours pas de ratio réalisé/objectif. |
 | G2-T15 | 🔶 Partiel | 2026-08-19 | Backoffice admin livré (périmètre plus large que le seul ticket, voir écarts) : CRUD domaines système (créer/modifier/désactiver), catalogue de badges Bronze/Argent/Or par domaine (CRUD complet), saisons (créer/clôturer, une seule active à la fois — fenêtre de comptage des badges), classement/stats utilisateurs (lecture seule, tri XP/niveau). Déblocage auto de badges branché dans `ActivityService`/`HabitService`. Rôle `ROLE_ADMIN` unique désigné par email (`gamify.admin.email`), `/api/backoffice/**` protégé, garde `RequireAdmin` côté front. Manque pour clore G2-T15 : animations/notifications de déblocage, galerie de badges côté joueur (`GET /api/badges/me` existe côté API, aucune UI ne l'appelle). |
 | — (tests) | ✅ Fait | 2026-08-19 | Dette technique "aucun test automatisé" comblée pour son périmètre minimal : JUnit backend (`UserProfileTest` — `ajouterXp`/`seuilXpPourNiveau` ; `HabitServiceTest` — streak courant, bonus 7 jours, recalcul de `meilleurStreak` après `annuler` ; `StatsServiceTest` — agrégation `progression`/`journalDuJour`), Vitest frontend (`useHabits.test.ts` — chargement, `toggleHabit` succès/échec avec rollback optimiste, garde "déjà fait aujourd'hui"), CI GitHub Actions minimale (`.github/workflows/ci.yml`, 2 jobs `backend-tests`/`frontend-tests`, déclenchée sur chaque PR + push `main`). |
@@ -481,6 +481,49 @@ qu'un ticket passe la checklist de validation — pas avant.
   graphique divergent et le journal en rouge en conditions réelles.
 - Backend relancé puis arrêté proprement après vérification (pas laissé tourner en tâche
   de fond à l'issue de la session).
+
+**Écarts/dette introduits par l'édition/suppression d'habitude G1-T11 (2026-08-20) :**
+- Suppression **logique** tranchée comme suggéré par le ticket : `habits.actif`
+  (migration V19, même patron que `domaines.actif` de V10) plutôt que
+  `DELETE FROM habits`, pour ne pas casser `HabitCompletion` (append-only depuis
+  V8) ni les badges déjà débloqués via cette habitude. `findOwnedHabit` filtre
+  aussi `actif` : check/annuler/update/delete sur une habitude déjà supprimée
+  renvoient tous 404, pas seulement le listing.
+- `PUT /api/habits/{id}` réutilise tel quel `HabitRequest` (remplacement complet
+  des 5 champs, y compris `domaineId` — pas seulement nom/icône/couleur/attribut
+  comme listé au critère d'acceptation) plutôt qu'un DTO d'édition partiel :
+  même convention que `AgendaController.update`/`AdminDomaineService.update`
+  (déjà en place, DTO de création réutilisé pour l'édition, remplacement complet
+  des champs). Le formulaire d'édition permet donc aussi de changer le domaine.
+- Frontend : `HabitForm` étendu (`initialValues`/`onDelete` optionnels) plutôt
+  que dupliqué pour l'édition — un seul formulaire création/édition, patron
+  copié tel quel sur `EventForm`/`AgendaPage` (G1-T10, `ModalState` unique avec
+  `event?`, bouton "Supprimer" `variant="ghost"` + `!text-danger` dans le
+  formulaire, `window.confirm` dans le handler de page juste avant l'appel
+  réseau). Accès à l'édition depuis la modale de détail existante via un lien
+  "✎ Modifier" qui ferme la modale de détail et ouvre la modale
+  édition/suppression (pas de mode bascule dans la modale de détail elle-même).
+- **Outil d'automatisation navigateur maintenant disponible dans cet
+  environnement** (contrairement à la limite notée sur les tickets précédents,
+  ex. volet restant G1-T06 ci-dessus) : `npx playwright install chromium` a
+  fonctionné (~300 Mo téléchargés une fois, mis en cache dans
+  `%LOCALAPPDATA%\ms-playwright`), permettant de dérouler un vrai scénario
+  Chromium headless (login → ouverture modale détail → clic "✎ Modifier" →
+  formulaire prérempli → modification nom/couleur → "Enregistrer" → carte à
+  jour → réouverture → "Supprimer" → `window.confirm` annulé puis confirmé →
+  carte disparue) avec captures d'écran à chaque étape, `console --errors`
+  vide. À réutiliser pour les prochains tickets frontend plutôt que de
+  re-noter cette limite comme non résolue.
+- Backend vérifié par HTTP réel (compte admin de test) en plus du parcours
+  navigateur : create → update (changement domaine/attribut/nom/couleur,
+  cohérence attribut∈domaine revérifiée → 400 si violée) → check (gain sur le
+  nouvel attribut confirmé) → delete → 200 ; re-`GET` liste : habitude absente ;
+  re-`DELETE`/`PUT`/`POST .../check` sur le même id → 404 chacun.
+- Backend relancé pour charger la migration V19 (pas de Spring DevTools dans ce
+  projet, pas de hot-reload JVM) puis laissé tourner **volontairement** à
+  l'issue de cette session — écart assumé par rapport à la convention notée
+  plus haut, pour que l'utilisateur puisse enchaîner une vérification manuelle
+  immédiate sans attendre un redémarrage.
 
 ## Dette technique connue
 

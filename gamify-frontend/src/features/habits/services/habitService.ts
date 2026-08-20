@@ -17,6 +17,11 @@ export const habitService = {
   createHabit: (request: HabitRequest): Promise<Habit> =>
     apiClient.post<Habit>('/habits', request),
 
+  updateHabit: (id: number, request: HabitRequest): Promise<Habit> =>
+    apiClient.put<Habit>(`/habits/${id}`, request),
+
+  deleteHabit: (id: number): Promise<void> => apiClient.delete<void>(`/habits/${id}`),
+
   checkHabit: (id: number): Promise<Habit> => apiClient.post<Habit>(`/habits/${id}/check`),
 
   cancelHabitDay: (id: number, date: string): Promise<Habit> =>
