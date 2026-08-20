@@ -74,7 +74,46 @@ public class HabitService {
     @Transactional(readOnly = true)
     public Page<HabitResponse> list(String email, Pageable pageable) {
         User user = findUserByEmail(email);
-        return habitRepository.findByUserId(user.getId(), pageable).map(this::toResponse);
+        return habitRepository.findByUserIdAndActifTrue(user.getId(), pageable).map(this::toResponse);
+    }
+
+    @Transactional
+    public HabitResponse update(String email, Long habitId, HabitRequest request) {
+        User user = findUserByEmail(email);
+        Habit habit = findOwnedHabit(habitId, user);
+        Domaine domaine = domaineRepository.findById(request.domaineId())
+                .orElseThrow(() -> new NotFoundException("Domaine introuvable"));
+
+        if (!domaine.getAttributs().contains(request.attributCible())) {
+            throw new DomainException(
+                    "L'attribut ciblé doit faire partie des attributs du domaine sélectionné");
+        }
+
+        habit.setNom(request.nom());
+        habit.setDomaine(domaine);
+        habit.setAttributCible(request.attributCible());
+        habit.setIcone(request.icone());
+        habit.setCouleur(request.couleur());
+        habitRepository.save(habit);
+
+        log.info("Habitude '{}' (id={}) modifiée par {}", habit.getNom(), habitId, email);
+        return toResponse(habit);
+    }
+
+    /**
+     * Suppression logique (domain.md, cohérence avec HabitCompletion append-only) :
+     * l'habitude disparaît des listes/du check quotidien, son historique de
+     * complétions/badges déjà débloqués reste intact.
+     */
+    @Transactional
+    public void delete(String email, Long habitId) {
+        User user = findUserByEmail(email);
+        Habit habit = findOwnedHabit(habitId, user);
+
+        habit.setActif(false);
+        habitRepository.save(habit);
+
+        log.info("Habitude '{}' (id={}) supprimée (logiquement) par {}", habit.getNom(), habitId, email);
     }
 
     @Transactional
@@ -182,6 +221,7 @@ public class HabitService {
 
     private Habit findOwnedHabit(Long habitId, User user) {
         Habit habit = habitRepository.findById(habitId)
+                .filter(Habit::isActif)
                 .orElseThrow(() -> new NotFoundException("Habitude introuvable"));
 
         if (!habit.getUser().getId().equals(user.getId())) {

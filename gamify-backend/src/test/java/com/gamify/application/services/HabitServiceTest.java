@@ -1,5 +1,7 @@
 package com.gamify.application.services;
 
+import com.gamify.application.dtos.habit.HabitRequest;
+import com.gamify.domain.entities.Domaine;
 import com.gamify.domain.entities.Habit;
 import com.gamify.domain.entities.HabitCompletion;
 import com.gamify.domain.entities.User;
@@ -25,6 +27,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -231,6 +234,77 @@ class HabitServiceTest {
                 .thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> sut.annuler(user.getEmail(), habit.getId(), today))
+                .isInstanceOf(NotFoundException.class);
+    }
+
+    @Test
+    void update_donneesValides_modifieLesChampsEtRetourneHabitude() {
+        Domaine domaine = new Domaine();
+        domaine.setId(5L);
+        domaine.setNom("Sport");
+        domaine.setAttributs(Set.of(Attribut.VIT));
+        when(domaineRepository.findById(5L)).thenReturn(Optional.of(domaine));
+        when(completionRepository.findByHabitIdAndDateCompletionGreaterThanEqualAndAnnuleFalseOrderByDateCompletionDesc(
+                eq(habit.getId()), any()))
+                .thenReturn(List.of());
+        HabitRequest request = new HabitRequest("Course", 5L, Attribut.VIT, "🏃", "#3b9dff");
+
+        var response = sut.update(user.getEmail(), habit.getId(), request);
+
+        assertThat(response.nom()).isEqualTo("Course");
+        assertThat(response.attributCible()).isEqualTo(Attribut.VIT);
+        assertThat(habit.getDomaine()).isEqualTo(domaine);
+        assertThat(habit.getIcone()).isEqualTo("🏃");
+        verify(habitRepository).save(habit);
+    }
+
+    @Test
+    void update_attributNAppartientPasAuDomaine_leveDomainException() {
+        Domaine domaine = new Domaine();
+        domaine.setId(5L);
+        domaine.setAttributs(Set.of(Attribut.INT));
+        when(domaineRepository.findById(5L)).thenReturn(Optional.of(domaine));
+        HabitRequest request = new HabitRequest("Course", 5L, Attribut.VIT, null, null);
+
+        assertThatThrownBy(() -> sut.update(user.getEmail(), habit.getId(), request))
+                .isInstanceOf(DomainException.class);
+    }
+
+    @Test
+    void update_habitudeAppartientAUnAutreUtilisateur_leveForbiddenException() {
+        User autreUser = new User();
+        autreUser.setId(2L);
+        habit.setUser(autreUser);
+        HabitRequest request = new HabitRequest("Course", 5L, Attribut.VIT, null, null);
+
+        assertThatThrownBy(() -> sut.update(user.getEmail(), habit.getId(), request))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void delete_habitudePropre_passeActifAFauxSansToucherAuxCompletions() {
+        sut.delete(user.getEmail(), habit.getId());
+
+        assertThat(habit.isActif()).isFalse();
+        verify(habitRepository).save(habit);
+    }
+
+    @Test
+    void delete_habitudeAutreUtilisateur_leveForbiddenException() {
+        User autreUser = new User();
+        autreUser.setId(2L);
+        habit.setUser(autreUser);
+
+        assertThatThrownBy(() -> sut.delete(user.getEmail(), habit.getId()))
+                .isInstanceOf(ForbiddenException.class);
+    }
+
+    @Test
+    void checkDate_habitudeDejaSupprimee_leveNotFoundException() {
+        habit.setActif(false);
+        LocalDate today = LocalDate.now();
+
+        assertThatThrownBy(() -> sut.checkDate(user.getEmail(), habit.getId(), today))
                 .isInstanceOf(NotFoundException.class);
     }
 }

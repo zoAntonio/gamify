@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface HabitRepository extends JpaRepository<Habit, Long> {
 
-    Page<Habit> findByUserId(Long userId, Pageable pageable);
+    Page<Habit> findByUserIdAndActifTrue(Long userId, Pageable pageable);
 }
