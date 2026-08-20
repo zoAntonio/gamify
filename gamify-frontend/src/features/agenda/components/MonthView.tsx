@@ -65,6 +65,7 @@ export const MonthView: FC<MonthViewProps> = ({ currentDate, events, onSelectDay
                     eventColorClasses(event),
                   ].join(' ')}
                 >
+                  {event.serieId !== null && <span aria-label="Événement récurrent">↻ </span>}
                   {event.titre}
                 </span>
               ))}

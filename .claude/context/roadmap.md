@@ -26,7 +26,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G1-T04 | ✅ Fait | 2026-08-19 | Volet malus complété : `UserProfile.appliquerMalusInactivite` applique −2/jour sans gain (−3 pour PRE), plancher 0, +−5 cumulé exactement au 3ᵉ jour consécutif de manque (compteur par attribut, remis à 0 dès qu'un gain a lieu). Job `InactivityPenaltyService` (par jour, par profil, idempotent via `derniereEvaluationPenalites`), déclenché à minuit par `InactivityPenaltyScheduler` (`@EnableScheduling`) et manuellement via `POST /api/backoffice/penalites/executer` (admin, rattrapage + tests). Chaque malus historisé dans `ProgressionLog` (delta négatif, daté du jour évalué). Migration V17. |
 | G1-T06 | ✅ Fait | 2026-08-20 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Volet restant (affichage des pertes issues du malus G1-T04) complété : `JournalDuJour` colorait déjà les entrées négatives en rouge/positives en vert depuis sa création (rien à faire) ; `ProgressionChart` (graphique "XP gagnés") devient un diagramme en barres divergentes — XP gagné (violet) vers le haut, points d'attributs perdus par malus (rouge, nouveau champ `pertesAttributs`) vers le bas d'une ligne zéro, chaque barre légendée par sa valeur (échelles indépendantes, l'XP n'étant jamais touchée par un malus — voir écart ci-dessous). Pas d'animation/tremblement (reste le périmètre G1-T14 "animations gain/pénalité"). |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
-| G1-T10 | 🔶 Partiel | 2026-07-17 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. Pas encore de récurrence ni resize par poignée. |
+| G1-T10 | ✅ Fait | 2026-08-20 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. **Récurrence ajoutée (2026-08-20)** : occurrences matérialisées (`serie_id` partagé, migration V18), fréquence quotidien/hebdomadaire (jours de semaine)/mensuel, date de fin obligatoire (max 1 an), UI "Répéter" à la création, choix "cette occurrence seule" (détachement auto de la série) vs "toute la série" à l'édition/suppression. Reste : pas de resize par poignée (toujours hors scope, non demandé par ce ticket). |
 | G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
 | G1-T09 | 🔶 Partiel | 2026-08-20 | Vue **kanban** 3 colonnes (À faire / En cours / Terminé) façon Azure DevOps Boards sur `/activities` : cartes avec liseré coloré par attribut, drag & drop HTML5 natif + boutons "Commencer"/"Valider", création via modale (`Modal` générique dans `components/ui/`, hauteur bornée + scroll interne pour le paysage mobile). Responsive : rail horizontal à snap (une colonne ≈ 85% de l'écran) sous `md`, grille 3 colonnes au-dessus ; `viewport-fit=cover` ajouté pour les écrans à encoche. Backend : `PATCH /api/activities/{id}/statut` (EN_COURS libre, TERMINE applique les récompenses, sortie de TERMINE refusée). **Filtres/tri ajoutés (2026-08-20)** : `ActivityFilters` (Select domaine + Select attribut + Select tri) au-dessus du board, état porté par `useActivityFilters` (query params `domaine`/`attribut`/`sort` via `useSearchParams`, partageable/rafraîchissable), branché sur `useActivities`/`activityService.listActivities`. **Zéro changement backend** : `ActivityController.search` acceptait déjà `domaineId`/`attributCible`/`Pageable`, et Spring Data JPA ajoute l'ORDER BY à partir du `Sort` du `Pageable` même sur une méthode `@Query` — vérifié par appels HTTP réels (curl, compte admin) : filtre domaine, filtre attribut, tri `createdAt` asc/desc, tri `statut` asc/desc, combinaison filtre+tri. Écart assumé : critère d'acceptation d'origine "tri par échéance" **non fait** — `Activity` n'a aucun champ date d'échéance (ni entité, ni DTO), décision utilisateur de ne pas l'ajouter dans ce ticket (voir dette ci-dessous). Toujours pas de ratio réalisé/objectif. |
 | G2-T15 | 🔶 Partiel | 2026-08-19 | Backoffice admin livré (périmètre plus large que le seul ticket, voir écarts) : CRUD domaines système (créer/modifier/désactiver), catalogue de badges Bronze/Argent/Or par domaine (CRUD complet), saisons (créer/clôturer, une seule active à la fois — fenêtre de comptage des badges), classement/stats utilisateurs (lecture seule, tri XP/niveau). Déblocage auto de badges branché dans `ActivityService`/`HabitService`. Rôle `ROLE_ADMIN` unique désigné par email (`gamify.admin.email`), `/api/backoffice/**` protégé, garde `RequireAdmin` côté front. Manque pour clore G2-T15 : animations/notifications de déblocage, galerie de badges côté joueur (`GET /api/badges/me` existe côté API, aucune UI ne l'appelle). |
@@ -189,6 +189,76 @@ qu'un ticket passe la checklist de validation — pas avant.
   date) **pas vérifié dans un navigateur réel** — même limite d'environnement
   que le reste de la feature habitudes, à tester manuellement par
   l'utilisateur.
+
+**Écarts/dette introduits par la récurrence agenda G1-T10 (2026-08-20) :**
+- **Occurrences matérialisées, décision assumée** (vs règle virtuelle expansée à
+  la volée, tranchée avec l'utilisateur) : chaque occurrence d'une série est une
+  ligne `agenda_events` normale, regroupées par `serie_id` (id de la 1ère
+  occurrence, partagé). Réutilise tel quel `GET /api/agenda?from&to` et le
+  drag & drop existants (id réel par occurrence). Contrepartie : date de fin de
+  récurrence **obligatoire**, bornée à 1 an après le début (pas de récurrence
+  infinie, décision utilisateur assumée — pas de job planifié à ajouter pour
+  étendre un horizon glissant).
+- `serie_id` est **volontairement sans contrainte FK** (juste une valeur de
+  regroupement) : avec `GenerationType.IDENTITY`, le 1er id n'est connu qu'après
+  l'INSERT (update en 2 temps nécessaire de toute façon), et une FK
+  auto-référencée sur `agenda_events.id` casserait dès qu'on supprime *cette
+  occurrence précise seule* (violation de contrainte, ou CASCADE qui
+  supprimerait toute la série par erreur).
+- Édition/suppression d'une occurrence seule : **pas de nouvel endpoint**,
+  `PUT /api/agenda/{id}` détache automatiquement la ligne de sa série
+  (`detachee=true`) dès qu'elle est éditée directement — une ligne détachée
+  n'est plus jamais touchée par une édition/régénération "toute la série".
+  Conséquence assumée : le **drag & drop** (qui appelle ce même endpoint)
+  détache donc aussi l'occurrence déplacée, sans prompt "cette occurrence /
+  toute la série" — ce choix n'est proposé que dans la modale d'édition
+  explicite, comme demandé par le ticket.
+- Édition "toute la série" (`PUT /api/agenda/{id}/serie`) : les occurrences déjà
+  passées gardent leur date d'origine (seuls titre/activité/heure-du-jour sont
+  réappliqués) ; seules les occurrences futures non détachées sont supprimées
+  puis régénérées selon la (nouvelle) règle. Bug intercepté et corrigé pendant
+  la vérification HTTP : si "aujourd'hui" avait déjà une occurrence passée dans
+  la journée, la régénération (qui démarre aussi à `today`) créait un doublon
+  ce jour-là — corrigé en excluant explicitement les dates déjà couvertes par
+  les occurrences passées conservées.
+- Limitation connue et acceptée (non corrigée) : la régénération ne vérifie pas
+  les dates déjà occupées par une occurrence **détachée** — une occurrence
+  détachée déplacée sur une date qui redevient générée par la série peut donc
+  coexister avec elle (chevauchement visuel), cohérent avec la dette déjà
+  connue "chevauchement d'événements non géré visuellement" (voir plus haut).
+  MENSUEL avec un départ le 31 saute aussi les mois plus courts (pas de repli
+  "dernier jour du mois") — comportement documenté dans
+  `AgendaService.generateOccurrenceDates` et couvert par un test dédié.
+- Suppression "toute la série" (`DELETE /api/agenda/{id}/serie`) : supprime
+  **toutes** les occurrences y compris celles détachées — décision assumée
+  ("toute la série" = tout disparaît, pas d'exception cachée).
+- Vérifié par appels HTTP réels (curl, compte jetable `agendarec_*@test.com`) :
+  création d'une série hebdomadaire (lundi/mercredi, 8 occurrences sur
+  4 semaines, même `serieId`) et d'une série quotidienne à cheval passé/futur ;
+  liste par plage `from`/`to` retournant bien toutes les occurrences ; édition
+  d'une occurrence seule → `detachee=true` confirmé en base ; édition de toute
+  la série → occurrences passées mises à jour sur place (même date, nouvelle
+  heure/titre), occurrences futures régénérées selon la nouvelle règle,
+  occurrence détachée intacte (confirme le correctif du doublon "aujourd'hui"
+  ci-dessus) ; suppression d'une occurrence seule (reste de la série intacte) ;
+  suppression de toute la série (plus aucune ligne) ; 4 cas d'erreur 400
+  (`finRecurrence` avant le début, hebdomadaire sans jour choisi, récurrence
+  > 1 an, `/serie` sur un événement non récurrent) ; 403 confirmé sur la série
+  d'un autre utilisateur (`findOwnedSerie` filtre par `user.id`, même patron
+  que `findOwnedEvent`). Frontend : `tsc -b`, `oxlint`, `npm run build`,
+  `npm test` (5 tests, `useHabits` inchangé) propres. **Pas de parcours
+  navigateur réel** (même limite d'environnement que tous les tickets
+  précédents, pas d'outil d'automatisation navigateur disponible ici) — à
+  vérifier manuellement par l'utilisateur via `scripts/devctl.ps1` : créer un
+  événement récurrent hebdo, vérifier son apparition sur plusieurs semaines en
+  vues Semaine/Mois (icône ↻), éditer "cette occurrence seule" vs "toute la
+  série", supprimer chaque portée.
+- `AgendaService` reste sans test Mockito sur `create`/`update`/`updateSeries`/
+  `deleteSeries` (seule `generateOccurrenceDates`, logique pure, est couverte
+  par `AgendaServiceTest`) — dette déjà connue sur cette classe, non aggravée.
+- Comptes de test (`agendarec_*@test.com`, `agendarec2_*@test.com`) et leurs
+  événements laissés en base locale (même pratique que les comptes jetables
+  des tickets précédents) — à nettoyer si la base doit rester propre.
 
 **Écarts/dette introduits par le backoffice admin G2-T15 (2026-08-19) :**
 - Périmètre livré plus large que G2-T15 seul : CRUD domaines système et

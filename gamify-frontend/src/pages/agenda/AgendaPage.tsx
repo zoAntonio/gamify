@@ -17,6 +17,7 @@ import {
 import type {
   AgendaEvent,
   AgendaEventRequest,
+  AgendaSeriesUpdateRequest,
   AgendaView,
 } from '@/features/agenda/types/agenda.types';
 
@@ -91,6 +92,19 @@ export const AgendaPage: FC = () => {
     if (!editing) return;
     if (!window.confirm(`Supprimer l'événement « ${editing.titre} » ?`)) return;
     runAction(() => agendaService.deleteEvent(editing.id), true);
+  };
+
+  const handleSubmitSeries = (request: AgendaSeriesUpdateRequest) => {
+    const editing = modal?.event;
+    if (!editing) return;
+    runAction(() => agendaService.updateEventSeries(editing.id, request), true);
+  };
+
+  const handleDeleteSeries = () => {
+    const editing = modal?.event;
+    if (!editing) return;
+    if (!window.confirm(`Supprimer TOUTE la série « ${editing.titre} » ?`)) return;
+    runAction(() => agendaService.deleteEventSeries(editing.id), true);
   };
 
   const handleEventDrop = (eventId: number, day: Date, hour: number) => {
@@ -175,7 +189,9 @@ export const AgendaPage: FC = () => {
             defaultDate={modal.date}
             defaultStartTime={modal.startTime}
             onSubmit={handleSubmit}
+            onSubmitSeries={handleSubmitSeries}
             onDelete={modal.event ? handleDelete : undefined}
+            onDeleteSeries={modal.event ? handleDeleteSeries : undefined}
             isSubmitting={isSubmitting}
           />
         )}

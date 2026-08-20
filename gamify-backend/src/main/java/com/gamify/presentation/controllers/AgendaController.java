@@ -3,6 +3,7 @@ package com.gamify.presentation.controllers;
 import com.gamify.application.dtos.ApiResponse;
 import com.gamify.application.dtos.agenda.AgendaEventRequest;
 import com.gamify.application.dtos.agenda.AgendaEventResponse;
+import com.gamify.application.dtos.agenda.AgendaSeriesUpdateRequest;
 import com.gamify.application.services.AgendaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -86,5 +87,26 @@ public class AgendaController {
     ) {
         agendaService.delete(authentication.getName(), id);
         return ApiResponse.success(null, "Événement supprimé");
+    }
+
+    @Operation(summary = "Modifier toute la série", description = "Modifie titre/heures/tâche liée et la règle de récurrence pour toutes les occurrences non détachées de la série (id de n'importe quelle occurrence de la série).")
+    @PutMapping("/{id}/serie")
+    public ApiResponse<Void> updateSeries(
+            Authentication authentication,
+            @Parameter(description = "Identifiant d'une occurrence de la série") @PathVariable Long id,
+            @Valid @RequestBody AgendaSeriesUpdateRequest request
+    ) {
+        agendaService.updateSeries(authentication.getName(), id, request);
+        return ApiResponse.success(null, "Série modifiée");
+    }
+
+    @Operation(summary = "Supprimer toute la série", description = "Supprime définitivement toutes les occurrences de la série, y compris celles détachées.")
+    @DeleteMapping("/{id}/serie")
+    public ApiResponse<Void> deleteSeries(
+            Authentication authentication,
+            @Parameter(description = "Identifiant d'une occurrence de la série") @PathVariable Long id
+    ) {
+        agendaService.deleteSeries(authentication.getName(), id);
+        return ApiResponse.success(null, "Série supprimée");
     }
 }

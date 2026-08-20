@@ -84,7 +84,9 @@ Points non négociables (grille de revue P0, cf. documents) :
   filtre JWT fonctionnel, Swagger. Features livrées : auth, profil/domaines
   (+ upload de photo d'avatar servie sur `/uploads/**`, public), tâches/kanban
   (`Activity`, statuts + récompenses), habitudes/streaks (`Habit`/`HabitCompletion`),
-  agenda (`AgendaEvent`), stats (`ProgressionLog` historisé à chaque gain,
+  agenda (`AgendaEvent`, occurrences récurrentes matérialisées — `serie_id`,
+  fréquence quotidien/hebdomadaire/mensuel, édition/suppression "cette
+  occurrence" vs "toute la série", voir roadmap.md G1-T10), stats (`ProgressionLog` historisé à chaque gain,
   `/api/stats/progression` + `/api/stats/journal`), niveaux/titres
   (`UserProfile.ajouterXp`, seuils doublants), **backoffice admin** (CRUD domaines
   système, catalogue de badges Bronze/Argent/Or par domaine, saisons —
@@ -97,7 +99,7 @@ Points non négociables (grille de revue P0, cf. documents) :
   job planifié du projet (`@EnableScheduling` + `InactivityPenaltyScheduler`,
   minuit), doublé d'un déclenchement manuel admin
   (`POST /api/backoffice/penalites/executer`, idempotent) pour rattrapage et
-  tests. Migrations jusqu'à **V17**.
+  tests. Migrations jusqu'à **V18**.
 - **`User` (credentials) / `UserProfile` (données de jeu) séparés** (V15/V16) :
   `users` ne porte plus que id/username/email/password/is_admin/audit ; tous
   les attributs RPG, xp/niveau/titre, avatar/avatar_image et domaines trackés
@@ -123,7 +125,9 @@ Points non négociables (grille de revue P0, cf. documents) :
   tri persistés en query params** — `useActivityFilters`, premier usage de
   `useSearchParams` dans le repo, patron à réutiliser pour tout futur
   filtre/tri partageable en URL, cf. tableau state management du doc de
-  convention), `agenda` (vues semaine/jour/mois),
+  convention), `agenda` (vues semaine/jour/mois, événements récurrents —
+  option "Répéter" à la création, choix "cette occurrence"/"toute la série"
+  à l'édition/suppression d'une occurrence récurrente),
   `habits` (grille type HabitKit), `dashboard` (carte du personnage FIFA-like,
   radar/barres d'attributs SVG faits main, XP par période, journal),
   `backoffice/{domaines,users,saisons,badges}` (pages `/admin/*`, garde de
