@@ -95,11 +95,12 @@ public class StatsService {
 
     private PointProgressionResponse toPoint(String label, LocalDate date, List<ProgressionLog> logs) {
         if (logs == null) {
-            return new PointProgressionResponse(label, date, 0, 0);
+            return new PointProgressionResponse(label, date, 0, 0, 0);
         }
         int gains = logs.stream().mapToInt(ProgressionLog::getDelta).filter(delta -> delta > 0).sum();
+        int pertes = -logs.stream().mapToInt(ProgressionLog::getDelta).filter(delta -> delta < 0).sum();
         int xp = logs.stream().mapToInt(entry -> entry.getXpApres() - entry.getXpAvant()).sum();
-        return new PointProgressionResponse(label, date, gains, xp);
+        return new PointProgressionResponse(label, date, gains, pertes, xp);
     }
 
     private ProgressionLogResponse toLogResponse(ProgressionLog entry) {

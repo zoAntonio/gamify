@@ -83,6 +83,7 @@ class StatsServiceTest {
                 .findFirst()
                 .orElseThrow();
         assertThat(pointAvecGain.gainsAttributs()).isEqualTo(1);
+        assertThat(pointAvecGain.pertesAttributs()).isZero();
         assertThat(pointAvecGain.xpGagne()).isEqualTo(10);
 
         long joursAZero = points.stream()
@@ -90,6 +91,25 @@ class StatsServiceTest {
                 .filter(point -> point.gainsAttributs() == 0 && point.xpGagne() == 0)
                 .count();
         assertThat(joursAZero).isEqualTo(6);
+    }
+
+    @Test
+    void progression_avecMalusInactivite_agregePertesAttributsEnValeurAbsolue() {
+        // Malus G1-T04 : delta négatif, xpAvant == xpApres (l'XP n'est jamais touchée).
+        LocalDate today = LocalDate.now();
+        LocalDate jourAvecMalus = today.minusDays(1);
+        when(progressionLogRepository.findByUserIdAndDateGreaterThanEqual(eq(user.getId()), any()))
+                .thenReturn(List.of(log(jourAvecMalus, -2, 10, 10), log(jourAvecMalus, -5, 10, 10)));
+
+        List<PointProgressionResponse> points = sut.progression(user.getEmail(), PeriodeStats.SEMAINE);
+
+        PointProgressionResponse pointAvecMalus = points.stream()
+                .filter(point -> point.date().equals(jourAvecMalus))
+                .findFirst()
+                .orElseThrow();
+        assertThat(pointAvecMalus.pertesAttributs()).isEqualTo(7);
+        assertThat(pointAvecMalus.gainsAttributs()).isZero();
+        assertThat(pointAvecMalus.xpGagne()).isZero();
     }
 
     @Test
@@ -102,6 +122,7 @@ class StatsServiceTest {
         assertThat(points).hasSize(30);
         assertThat(points).allSatisfy(point -> {
             assertThat(point.gainsAttributs()).isZero();
+            assertThat(point.pertesAttributs()).isZero();
             assertThat(point.xpGagne()).isZero();
         });
     }

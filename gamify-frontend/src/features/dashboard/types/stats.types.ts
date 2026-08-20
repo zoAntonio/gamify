@@ -17,6 +17,8 @@ export interface PointProgression {
   label: string;
   date: string;
   gainsAttributs: number;
+  /** Pertes de points d'attributs (malus d'inactivité, G1-T04), en valeur absolue. */
+  pertesAttributs: number;
   xpGagne: number;
 }
 

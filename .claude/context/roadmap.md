@@ -24,7 +24,7 @@ qu'un ticket passe la checklist de validation — pas avant.
 | G0-T03 | ✅ Fait | 2026-07-17 | Tableau de bord réel (`DashboardPage`) : carte du personnage façon FIFA (photo uploadée ou emoji de classe, niveau+titre, note générale = moyenne des 6 attributs, barre d'XP vers le prochain seuil), barres d'attributs + radar SVG, XP par période (semaine/mois/année), journal du jour. Pas encore de streak ni dernier badge sur le dashboard (badges = G2-T15). |
 | G1-T05 | ✅ Fait | 2026-07-17 | Courbe de niveaux dans `User.ajouterXp` : seuils doublants (niveau n à 100·(2^(n−1)−1) XP : 100, 300, 700...), 8 titres Novice→Légende, niveau ne baisse jamais. Vérifié : 100 XP → niveau 2 "Initié", seuil suivant 300. Pas d'animation de montée de niveau (G1-T14). |
 | G1-T04 | ✅ Fait | 2026-08-19 | Volet malus complété : `UserProfile.appliquerMalusInactivite` applique −2/jour sans gain (−3 pour PRE), plancher 0, +−5 cumulé exactement au 3ᵉ jour consécutif de manque (compteur par attribut, remis à 0 dès qu'un gain a lieu). Job `InactivityPenaltyService` (par jour, par profil, idempotent via `derniereEvaluationPenalites`), déclenché à minuit par `InactivityPenaltyScheduler` (`@EnableScheduling`) et manuellement via `POST /api/backoffice/penalites/executer` (admin, rattrapage + tests). Chaque malus historisé dans `ProgressionLog` (delta négatif, daté du jour évalué). Migration V17. |
-| G1-T06 | 🔶 Partiel | 2026-08-19 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Les malus G1-T04 alimentent maintenant réellement des deltas négatifs dans `ProgressionLog` (vérifié en base), mais aucune UI dédiée ne les traite encore différemment des gains (pas de rouge/tremblement — reste le périmètre G1-T14 "animations gain/pénalité"). |
+| G1-T06 | ✅ Fait | 2026-08-20 | Radar chart 6 attributs + barres colorées + graphique XP par semaine/mois/année (`/api/stats/progression`, buckets zéros compris) + journal du jour paginé (`/api/stats/journal`). Volet restant (affichage des pertes issues du malus G1-T04) complété : `JournalDuJour` colorait déjà les entrées négatives en rouge/positives en vert depuis sa création (rien à faire) ; `ProgressionChart` (graphique "XP gagnés") devient un diagramme en barres divergentes — XP gagné (violet) vers le haut, points d'attributs perdus par malus (rouge, nouveau champ `pertesAttributs`) vers le bas d'une ligne zéro, chaque barre légendée par sa valeur (échelles indépendantes, l'XP n'étant jamais touchée par un malus — voir écart ci-dessous). Pas d'animation/tremblement (reste le périmètre G1-T14 "animations gain/pénalité"). |
 | G1-T07 | 🔶 Partiel | 2026-07-10 | Création/validation de tâches (`Activity` + `ActivityService`/`Controller`, CRUD create/list/valider). Gain d'attribut à la validation implémenté en version **minimale** (`User.appliquerGainAttribut` : +1 seulement) — pas de malus/plancher/historisation `ProgressionLog`/recalcul de niveau, volontairement reporté à G1-T04/G1-T05 (décision utilisateur : ne pas développer G1-T04 tout de suite). Pas encore d'animations +1/−2 instantanées (ticket original les mentionne, hors scope ici — vue liste simple, pas de Kanban). |
 | G1-T10 | 🔶 Partiel | 2026-07-17 | Agenda 3 vues (semaine/jour/mois) sur `/agenda` : événements libres **ou liés à une tâche** (`AgendaEvent.activity` optionnel), couleur selon règle du ticket (accent violet / vert TERMINE / rouge manqué), ligne "maintenant", clic sur créneau = création préremplie, déplacement par drag & drop HTML5 (granularité 1h) ou édition en modale, suppression avec confirmation. Backend : CRUD `/api/agenda` borné `from`/`to` paginé. Pas encore de récurrence ni resize par poignée. |
 | G1-T11 | 🔶 Partiel | 2026-07-26 | Tracker d'habitudes façon HabitKit sur `/habits` : carte par habitude (icône emoji, couleur, bouton ✓ du jour), grille de contributions 12 semaines (84 jours) compacte façon GitHub, tooltip date au survol prolongé, clic sur le nom = modale de détail avec calendrier mensuel navigable (cocher/annuler n'importe quel jour passé en un clic). Check = +1 attribut ciblé + 10 XP, **bonus +10 XP à chaque multiple de 7 jours de série** (domain.md), re-check refusé sur une date déjà cochée (409), date future refusée (400). **Annulation** d'une complétion (n'importe quel jour, double-clic sur la petite grille ou clic dans le calendrier) : annulation logique (`HabitCompletion.annule`, ligne jamais supprimée), reprise symétrique de l'XP/attribut, `meilleurStreak` recalculé honnêtement sur l'historique complet restant. Reste : notifications (G1-T12), éditer/supprimer une habitude. |
@@ -329,6 +329,47 @@ qu'un ticket passe la checklist de validation — pas avant.
   réellement sur GitHub (pas de push effectué dans cette session) — seule sa
   cohérence avec les commandes locales validées est garantie ; à confirmer au premier
   push/PR réel.
+
+**Écarts/dette introduits par le volet restant de G1-T06 (2026-08-20) :**
+- **Décision non explicite dans le ticket, à noter** : le critère "le graphique d'XP par
+  période distingue visuellement les baisses" ne peut pas s'entendre littéralement — le
+  malus d'inactivité (G1-T04) ne touche jamais `xpTotal` (voir Javadoc
+  `InactivityPenaltyService.enregistrerMalus`, `xpAvant == xpApres` pour toute ligne de
+  malus), donc l'XP gagnée sur une période ne peut structurellement jamais être négative.
+  Interprété comme : le graphique existant ("XP gagnés") doit aussi rendre visibles les
+  pertes de **points d'attributs** (le vrai sens de "pertes de points" dans la description
+  du ticket), pas une XP négative qui n'existera jamais. `PointProgressionResponse` gagne
+  un champ `pertesAttributs` (somme en valeur absolue des deltas `ProgressionLog` négatifs
+  de la période, symétrique de `gainsAttributs` qui existait déjà côté DTO mais n'était
+  consommé par aucun composant frontend avant ce ticket — champ mort comblé). `ProgressionChart`
+  devient un diagramme en barres divergentes autour d'une ligne zéro (XP en violet vers le
+  haut, `pertesAttributs` en rouge vers le bas), avec deux échelles indépendantes (les deux
+  métriques n'étant pas comparables en unité) — chaque barre porte sa valeur exacte en texte
+  pour lever l'ambiguïté, et une légende explicite sous le titre. À reconsidérer si le
+  produit veut un jour un malus qui retire aussi de l'XP (changerait la donne).
+- `JournalDuJour` n'a nécessité **aucune modification** : le rendu rouge/vert sur
+  `entry.delta >= 0` existait déjà depuis la création du dashboard (avant même G1-T04),
+  écrit par anticipation — seul le graphique de progression avait la lacune.
+- Vérifié par appels HTTP réels sur le compte `malustest@test.com` (backend relancé,
+  `scripts` habituels) : `GET /api/stats/progression?periode=SEMAINE` — les 3 jours de
+  malus déjà en base (17/18/19 août) remontent `pertesAttributs` à 9, 9, 29 (9 = malus
+  journalier sur 4 attributs trackés — FOR/VIT/CHA à −2, PRE à −3 ; 29 = 9 + les 4 malus
+  cumulés "3 jours consécutifs" à −5 le 3ᵉ jour), `xpGagne` à 0 sur ces trois jours ;
+  `POST /api/backoffice/penalites/executer?date=2026-08-20` (admin) pour rattraper le jour
+  courant a produit 4 nouvelles lignes `ProgressionLog` (delta −3 PRE, −2 CHA/FOR/VIT),
+  visibles telles quelles sur `GET /api/stats/journal` (attribut + delta négatif + xpGagne
+  à 0 par ligne) et agrégées à `pertesAttributs: 9` sur le point du jour dans `/progression`.
+  Confirme l'agrégation backend bout-en-bout avec de vraies données de malus, pas seulement
+  les mocks Mockito du test unitaire ajouté (`StatsServiceTest`, nouveau cas
+  `progression_avecMalusInactivite_agregePertesAttributsEnValeurAbsolue`).
+- Frontend : `tsc -b`, `oxlint`, `npm test` (5 tests, `useHabits` inchangé) et
+  `vite build` propres. **Pas de parcours navigateur réel** (même limite d'environnement
+  que les tickets précédents, pas d'outil d'automatisation navigateur disponible ici) — à
+  vérifier manuellement par l'utilisateur via `scripts/devctl.ps1` sur le compte
+  `malustest@test.com`/`malustest2@test.com` (mot de passe `password123`) pour voir le
+  graphique divergent et le journal en rouge en conditions réelles.
+- Backend relancé puis arrêté proprement après vérification (pas laissé tourner en tâche
+  de fond à l'issue de la session).
 
 ## Dette technique connue
 
