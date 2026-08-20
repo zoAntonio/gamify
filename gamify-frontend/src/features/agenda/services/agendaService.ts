@@ -3,6 +3,7 @@ import type {
   ActivityOption,
   AgendaEvent,
   AgendaEventRequest,
+  AgendaSeriesUpdateRequest,
   PageResponse,
 } from '@/features/agenda/types/agenda.types';
 
@@ -19,6 +20,13 @@ export const agendaService = {
     apiClient.put<AgendaEvent>(`/agenda/${id}`, request),
 
   deleteEvent: (id: number): Promise<void> => apiClient.delete<void>(`/agenda/${id}`),
+
+  // Édition/suppression "toute la série" — id de n'importe quelle occurrence
+  // de la série (voir AgendaService côté backend).
+  updateEventSeries: (id: number, request: AgendaSeriesUpdateRequest): Promise<void> =>
+    apiClient.put<void>(`/agenda/${id}/serie`, request),
+
+  deleteEventSeries: (id: number): Promise<void> => apiClient.delete<void>(`/agenda/${id}/serie`),
 
   // Duplique volontairement l'appel /api/activities (pour le select "Lier à une
   // tâche") — pas de dépendance croisée entre features (frontend-workflow.md).

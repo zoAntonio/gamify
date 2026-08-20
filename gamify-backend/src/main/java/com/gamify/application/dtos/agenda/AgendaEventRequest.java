@@ -15,6 +15,10 @@ public record AgendaEventRequest(
         @NotNull(message = "La date de fin est obligatoire")
         LocalDateTime dateFin,
 
-        Long activityId
+        Long activityId,
+
+        // null = événement libre (comportement actuel). Utilisé seulement par la
+        // création — l'édition d'une occurrence seule (PUT /{id}) l'ignore.
+        RecurrenceRequest recurrence
 ) {
 }

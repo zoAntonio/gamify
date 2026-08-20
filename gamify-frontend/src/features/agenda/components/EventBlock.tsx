@@ -34,7 +34,10 @@ export const EventBlock: FC<EventBlockProps> = ({ event, hourHeight, onClick }) 
         height: ((endMinutes - startMinutes) / 60) * hourHeight,
       }}
     >
-      <span className="truncate text-[11px] font-semibold leading-tight">{event.titre}</span>
+      <span className="truncate text-[11px] font-semibold leading-tight">
+        {event.serieId !== null && <span aria-label="Événement récurrent">↻ </span>}
+        {event.titre}
+      </span>
       <span className="truncate text-[10px] opacity-80">
         {formatTime(event.dateDebut)} – {formatTime(event.dateFin)}
       </span>
