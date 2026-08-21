@@ -2,13 +2,15 @@ import type { FC } from 'react';
 import { Pagination } from '@/components/ui/Pagination';
 import { Select } from '@/components/ui/Select';
 import { Skeleton } from '@/components/ui/Skeleton';
+import { TextField } from '@/components/ui/TextField';
 import { useAdminUsers } from '@/features/backoffice/users/hooks/useAdminUsers';
 import { AdminUserRanking } from '@/features/backoffice/users/components/AdminUserRanking';
 import { AdminUserStatsCard } from '@/features/backoffice/users/components/AdminUserStatsCard';
 import type { SortBy } from '@/features/backoffice/users/types/adminUser.types';
 
 export const AdminUsersPage: FC = () => {
-  const { users, stats, page, totalPages, sortBy, setSortBy, setPage, isLoading, error } = useAdminUsers();
+  const { users, stats, page, totalPages, sortBy, setSortBy, search, setSearch, setPage, isLoading, error } =
+    useAdminUsers();
 
   return (
     <section className="flex flex-col gap-6">
@@ -21,16 +23,28 @@ export const AdminUsersPage: FC = () => {
 
       {stats && <AdminUserStatsCard stats={stats} />}
 
-      <div className="max-w-xs">
-        <Select
-          id="admin-users-sort"
-          label="Trier par"
-          value={sortBy}
-          onChange={(event) => setSortBy(event.target.value as SortBy)}
-        >
-          <option value="xpTotal">XP total</option>
-          <option value="niveau">Niveau</option>
-        </Select>
+      <div className="flex flex-wrap gap-4">
+        <div className="max-w-xs flex-1">
+          <TextField
+            id="admin-users-search"
+            label="Rechercher"
+            type="search"
+            placeholder="Username ou email..."
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </div>
+        <div className="max-w-xs">
+          <Select
+            id="admin-users-sort"
+            label="Trier par"
+            value={sortBy}
+            onChange={(event) => setSortBy(event.target.value as SortBy)}
+          >
+            <option value="xpTotal">XP total</option>
+            <option value="niveau">Niveau</option>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (

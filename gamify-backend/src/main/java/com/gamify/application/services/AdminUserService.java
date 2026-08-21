@@ -26,8 +26,10 @@ public class AdminUserService {
     private final UserProfileRepository userProfileRepository;
 
     @Transactional(readOnly = true)
-    public Page<UserRankResponse> ranking(Pageable pageable) {
-        Page<UserProfile> page = userProfileRepository.findAll(pageable);
+    public Page<UserRankResponse> ranking(Pageable pageable, String search) {
+        Page<UserProfile> page = (search != null && !search.isBlank())
+                ? userProfileRepository.searchByUsernameOrEmail(search.trim(), pageable)
+                : userProfileRepository.findAll(pageable);
 
         // Un seul aller supplémentaire pour résoudre les usernames (credentials)
         // plutôt qu'un accès lazy profile.getUser() par ligne (N+1).
