@@ -17,6 +17,7 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/activities', label: 'Tâches' },
   { to: '/agenda', label: 'Agenda' },
   { to: '/habits', label: 'Habitudes' },
+  { to: '/badges', label: 'Badges' },
   { to: '/onboarding', label: 'Profil' },
   { to: '/settings/notifications', label: 'Notifications' },
 ];

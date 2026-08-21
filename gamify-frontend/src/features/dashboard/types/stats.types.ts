@@ -38,3 +38,15 @@ export interface PageResponse<T> {
   number: number;
   size: number;
 }
+
+// Sous-ensemble minimal de UserBadgeResponse (GET /api/badges/me) utile à la carte
+// "Dernier badge" du tableau de bord — dupliqué volontairement plutôt qu'importé
+// depuis features/badges (indépendance des features, même choix que
+// notification.types.ts pour ce même endpoint).
+export interface LastBadge {
+  id: number;
+  badgeNom: string;
+  palier: 'BRONZE' | 'ARGENT' | 'OR';
+  domaineNom: string;
+  dateObtention: string;
+}
