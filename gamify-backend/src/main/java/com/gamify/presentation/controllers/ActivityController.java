@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Activités", description = "Gestion des tâches/activités (kanban) et de leur validation")
 @SecurityRequirement(name = "bearerAuth")
@@ -78,15 +80,28 @@ public class ActivityController {
         );
     }
 
-    @Operation(summary = "Valider une activité", description = "Valide une activité terminée et attribue les points d'attribut correspondants.")
+    @Operation(summary = "Valider une activité", description = "Valide une activité et attribue les points d'attribut correspondants (+2 au lieu de +1 si une photo preuve — PNG/JPEG ≤ 2 Mo, redimensionnée — est jointe).")
     @PostMapping("/{id}/valider")
     public ApiResponse<ActivityResponse> valider(
+            Authentication authentication,
+            @Parameter(description = "Identifiant de l'activité") @PathVariable Long id,
+            @Parameter(description = "Photo preuve optionnelle") @RequestParam(value = "photo", required = false) MultipartFile photo
+    ) {
+        return ApiResponse.success(
+                activityService.valider(authentication.getName(), id, photo),
+                "Tâche validée"
+        );
+    }
+
+    @Operation(summary = "Supprimer la photo preuve", description = "Retire la photo preuve d'une tâche déjà validée (le bonus d'attribut déjà accordé n'est pas repris).")
+    @DeleteMapping("/{id}/photo")
+    public ApiResponse<ActivityResponse> supprimerPhoto(
             Authentication authentication,
             @Parameter(description = "Identifiant de l'activité") @PathVariable Long id
     ) {
         return ApiResponse.success(
-                activityService.valider(authentication.getName(), id),
-                "Tâche validée"
+                activityService.supprimerPhoto(authentication.getName(), id),
+                "Photo supprimée"
         );
     }
 }

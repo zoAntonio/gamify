@@ -15,6 +15,8 @@ interface UseActivitiesReturn {
   error: Error | null;
   refetch: () => void;
   changerStatutOptimistic: (id: number, statut: StatutKanban) => Promise<Error | null>;
+  validerAvecPhoto: (id: number, photo: File) => Promise<Error | null>;
+  supprimerPhoto: (id: number) => Promise<Error | null>;
 }
 
 export const useActivities = (filters: UseActivitiesFilters = {}): UseActivitiesReturn => {
@@ -77,5 +79,49 @@ export const useActivities = (filters: UseActivitiesFilters = {}): UseActivities
     [page],
   );
 
-  return { activities: page?.content ?? [], isLoading, error, refetch, changerStatutOptimistic };
+  // Remplace une activité dans la liste par sa version renvoyée par le serveur —
+  // pas d'aperçu optimiste possible ici (le résultat dépend du traitement de la photo).
+  const applyUpdatedActivity = useCallback((updated: Activity) => {
+    setPage((current) =>
+      current
+        ? { ...current, content: current.content.map((activity) => (activity.id === updated.id ? updated : activity)) }
+        : current,
+    );
+  }, []);
+
+  const validerAvecPhoto = useCallback(
+    async (id: number, photo: File): Promise<Error | null> => {
+      try {
+        const updated = await activityService.validerAvecPhoto(id, photo);
+        applyUpdatedActivity(updated);
+        return null;
+      } catch (err) {
+        return err instanceof Error ? err : new Error('Erreur inconnue');
+      }
+    },
+    [applyUpdatedActivity],
+  );
+
+  const supprimerPhoto = useCallback(
+    async (id: number): Promise<Error | null> => {
+      try {
+        const updated = await activityService.supprimerPhotoPreuve(id);
+        applyUpdatedActivity(updated);
+        return null;
+      } catch (err) {
+        return err instanceof Error ? err : new Error('Erreur inconnue');
+      }
+    },
+    [applyUpdatedActivity],
+  );
+
+  return {
+    activities: page?.content ?? [],
+    isLoading,
+    error,
+    refetch,
+    changerStatutOptimistic,
+    validerAvecPhoto,
+    supprimerPhoto,
+  };
 };

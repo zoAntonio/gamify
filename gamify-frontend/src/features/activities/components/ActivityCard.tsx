@@ -1,12 +1,16 @@
 import type { DragEvent, FC } from 'react';
 import { Button } from '@/components/ui/Button';
+import { API_ORIGIN } from '@/lib/apiClient';
 import type { Attribut } from '@/types/attribut.types';
 import type { Activity, StatutKanban } from '@/features/activities/types/activity.types';
 
 interface ActivityCardProps {
   activity: Activity;
   onChangeStatut: (id: number, statut: StatutKanban) => void;
+  onOpenValidation: (activity: Activity) => void;
+  onDeletePhoto: (id: number) => void;
   isUpdating: boolean;
+  isDeletingPhoto: boolean;
 }
 
 const FREQUENCE_LABELS: Record<Activity['frequence'], string> = {
@@ -24,7 +28,14 @@ const ATTRIBUT_COLORS: Record<Attribut, string> = {
   RES: 'var(--color-res)',
 };
 
-export const ActivityCard: FC<ActivityCardProps> = ({ activity, onChangeStatut, isUpdating }) => {
+export const ActivityCard: FC<ActivityCardProps> = ({
+  activity,
+  onChangeStatut,
+  onOpenValidation,
+  onDeletePhoto,
+  isUpdating,
+  isDeletingPhoto,
+}) => {
   const isDone = activity.statut === 'TERMINE';
 
   const handleDragStart = (event: DragEvent<HTMLDivElement>) => {
@@ -79,13 +90,38 @@ export const ActivityCard: FC<ActivityCardProps> = ({ activity, onChangeStatut, 
           type="button"
           className="!px-3 !py-1.5 text-[12px]"
           isLoading={isUpdating}
-          onClick={() => onChangeStatut(activity.id, 'TERMINE')}
+          onClick={() => onOpenValidation(activity)}
         >
           Valider
         </Button>
       )}
 
-      {isDone && <span className="text-[12px] font-medium text-success">✓ Validée</span>}
+      {isDone && (
+        <div className="flex flex-col gap-2">
+          <span className="text-[12px] font-medium text-success">
+            ✓ Validée{activity.photoUrl && ' · +2 (photo preuve)'}
+          </span>
+
+          {activity.photoUrl && (
+            <div className="flex items-center gap-2">
+              <img
+                src={`${API_ORIGIN}${activity.photoUrl}`}
+                alt={`Preuve de « ${activity.nom} »`}
+                className="h-12 w-12 rounded-input object-cover shadow-subtle"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                className="!px-2 !py-1 text-[11px] !text-danger"
+                isLoading={isDeletingPhoto}
+                onClick={() => onDeletePhoto(activity.id)}
+              >
+                Supprimer la photo
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

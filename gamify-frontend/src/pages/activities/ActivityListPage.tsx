@@ -9,8 +9,9 @@ import { activityService } from '@/features/activities/services/activityService'
 import { ActivityForm } from '@/features/activities/components/ActivityForm';
 import { ActivityCard } from '@/features/activities/components/ActivityCard';
 import { ActivityFilters } from '@/features/activities/components/ActivityFilters';
+import { ActivityValidationModal } from '@/features/activities/components/ActivityValidationModal';
 import { KanbanColumn } from '@/features/activities/components/KanbanColumn';
-import type { ActivityRequest, StatutKanban } from '@/features/activities/types/activity.types';
+import type { Activity, ActivityRequest, StatutKanban } from '@/features/activities/types/activity.types';
 
 const COLUMNS: { statut: StatutKanban; title: string }[] = [
   { statut: 'A_FAIRE', title: 'À faire' },
@@ -20,14 +21,17 @@ const COLUMNS: { statut: StatutKanban; title: string }[] = [
 
 export const ActivityListPage: FC = () => {
   const filters = useActivityFilters();
-  const { activities, isLoading, error, refetch, changerStatutOptimistic } = useActivities({
-    domaineId: filters.domaineId,
-    attributCible: filters.attributCible,
-    sort: filters.sort || undefined,
-  });
+  const { activities, isLoading, error, refetch, changerStatutOptimistic, validerAvecPhoto, supprimerPhoto } =
+    useActivities({
+      domaineId: filters.domaineId,
+      attributCible: filters.attributCible,
+      sort: filters.sort || undefined,
+    });
   const [isModalOpen, setModalOpen] = useState(false);
   const [isCreating, setCreating] = useState(false);
   const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [deletingPhotoId, setDeletingPhotoId] = useState<number | null>(null);
+  const [validatingActivity, setValidatingActivity] = useState<Activity | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
   const handleCreate = async (request: ActivityRequest) => {
@@ -53,6 +57,24 @@ export const ActivityListPage: FC = () => {
     const error = await changerStatutOptimistic(id, statut);
     if (error) setActionError(error.message);
     setUpdatingId(null);
+  };
+
+  // "Valider sans photo" depuis la modale : même chemin que le passage direct en TERMINE.
+  const handleValidateWithoutPhoto = async (id: number) => {
+    setUpdatingId(id);
+    setActionError(null);
+    const error = await changerStatutOptimistic(id, 'TERMINE');
+    setUpdatingId(null);
+    if (error) setActionError(error.message);
+    else setValidatingActivity(null);
+  };
+
+  const handleDeletePhoto = async (id: number) => {
+    setDeletingPhotoId(id);
+    setActionError(null);
+    const error = await supprimerPhoto(id);
+    if (error) setActionError(error.message);
+    setDeletingPhotoId(null);
   };
 
   return (
@@ -114,7 +136,10 @@ export const ActivityListPage: FC = () => {
                     key={activity.id}
                     activity={activity}
                     onChangeStatut={handleChangeStatut}
+                    onOpenValidation={setValidatingActivity}
+                    onDeletePhoto={handleDeletePhoto}
                     isUpdating={updatingId === activity.id}
+                    isDeletingPhoto={deletingPhotoId === activity.id}
                   />
                 ))}
               </KanbanColumn>
@@ -127,6 +152,14 @@ export const ActivityListPage: FC = () => {
         {actionError && <p className="mb-3 text-[14px] text-danger">{actionError}</p>}
         <ActivityForm onSubmit={handleCreate} isSubmitting={isCreating} />
       </Modal>
+
+      <ActivityValidationModal
+        activity={validatingActivity}
+        onClose={() => setValidatingActivity(null)}
+        onValidateWithoutPhoto={handleValidateWithoutPhoto}
+        onValidateWithPhoto={validerAvecPhoto}
+        isValidatingWithoutPhoto={validatingActivity !== null && updatingId === validatingActivity.id}
+      />
     </section>
   );
 };

@@ -131,13 +131,23 @@ public class UserProfile {
      * restent le périmètre non traité de G1-T04.
      */
     public void appliquerGainAttribut(Attribut attribut) {
+        appliquerGainAttribut(attribut, 1);
+    }
+
+    /**
+     * Gain d'un montant explicite (G2-T16, domain.md "Validation avec photo comme
+     * preuve → +2 pts au lieu de +1") — {@link #appliquerGainAttribut(Attribut)}
+     * délègue ici avec 1. Pas de plancher/plafond ici : seules les pertes sont
+     * bornées (voir {@link #appliquerVariation}), un gain reste un gain.
+     */
+    public void appliquerGainAttribut(Attribut attribut, int montant) {
         switch (attribut) {
-            case INT -> intelligence++;
-            case FOR -> force++;
-            case VIT -> vitalite++;
-            case PRE -> precision++;
-            case CHA -> charisme++;
-            case RES -> resistance++;
+            case INT -> intelligence += montant;
+            case FOR -> force += montant;
+            case VIT -> vitalite += montant;
+            case PRE -> precision += montant;
+            case CHA -> charisme += montant;
+            case RES -> resistance += montant;
         }
     }
 
