@@ -117,7 +117,18 @@ Points non négociables (grille de revue P0, cf. documents) :
   backend** : le rappel 30 min avant un événement d'agenda, l'alerte 22h et la
   célébration niveau/badge sont entièrement calculés côté frontend par sondage
   périodique (décision assumée pour la contrainte zéro coût, voir roadmap.md).
-  Migrations jusqu'à **V20**.
+  **Dimension sociale multi-utilisateurs** (G2-T17, 2026-08-21) : réglage de
+  visibilité opt-in sur `UserProfile` (`profilPublic`, **désactivé par défaut**
+  — seul booléen du projet dont le défaut sûr est "rien n'est exposé", à
+  l'inverse des 3 booléens de notification ci-dessus), lu/écrit par
+  `PrivacyPreferencesService`/`Controller` (`GET`/`PUT /api/privacy-preferences`,
+  même patron que les préférences de notification) ; classement général
+  (xpTotal/niveau) et par attribut + fil d'activité (gains récents uniquement,
+  pas les badges) exposés par `SocialService`/`SocialController`
+  (`GET /api/social/classement`, `GET /api/social/fil-activite` — ouverts à
+  tout utilisateur authentifié, pas réservés à l'admin comme
+  `/api/backoffice/users`), tous deux filtrés aux seuls profils opt-in. Migrations
+  jusqu'à **V22**.
 - **`User` (credentials) / `UserProfile` (données de jeu) séparés** (V15/V16) :
   `users` ne porte plus que id/username/email/password/is_admin/audit ; tous
   les attributs RPG, xp/niveau/titre, avatar/avatar_image et domaines trackés
@@ -162,7 +173,11 @@ Points non négociables (grille de revue P0, cf. documents) :
   moteur de détection `useNotificationEngine` monté dans `AppLayout` — sondage
   60s de `/api/profile`/`/api/badges/me`/`/api/agenda`, notification navigateur
   + bandeau in-app systématique via `useNotificationStore` (Zustand) et
-  `NotificationCenter`, pas de Web Push — voir roadmap.md G1-T12). UI générique
+  `NotificationCenter`, pas de Web Push — voir roadmap.md G1-T12), `social`
+  (`/classement` — filtre attribut + tri par XP/niveau porté par l'URL via
+  `useRankingFilters`, même patron `useSearchParams` que `useActivityFilters` ;
+  `/fil-activite` ; réglage de visibilité sur `/settings/confidentialite`,
+  toggle unique désactivé par défaut — voir roadmap.md G2-T17). UI générique
   dans `components/ui/` (`Button`, `Modal`, `Select`, `TextField`,
   `Pagination`...), thème Tailwind v4 dans `index.css` (tokens
   couleurs/attributs). `react-router-dom` + `zustand` ; toujours pas de

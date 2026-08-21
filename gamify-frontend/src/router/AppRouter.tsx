@@ -11,7 +11,10 @@ import { ActivityListPage } from '@/pages/activities/ActivityListPage';
 import { AgendaPage } from '@/pages/agenda/AgendaPage';
 import { HabitsPage } from '@/pages/habits/HabitsPage';
 import { BadgesPage } from '@/pages/badges/BadgesPage';
+import { RankingPage } from '@/pages/social/RankingPage';
+import { ActivityFeedPage } from '@/pages/social/ActivityFeedPage';
 import { NotificationSettingsPage } from '@/pages/settings/NotificationSettingsPage';
+import { PrivacySettingsPage } from '@/pages/settings/PrivacySettingsPage';
 import { AdminDomainesPage } from '@/pages/admin/AdminDomainesPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
 import { AdminSaisonsPage } from '@/pages/admin/AdminSaisonsPage';
@@ -35,7 +38,10 @@ export const AppRouter: FC = () => {
             <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/habits" element={<HabitsPage />} />
             <Route path="/badges" element={<BadgesPage />} />
+            <Route path="/classement" element={<RankingPage />} />
+            <Route path="/fil-activite" element={<ActivityFeedPage />} />
             <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
+            <Route path="/settings/confidentialite" element={<PrivacySettingsPage />} />
 
             <Route element={<RequireAdmin />}>
               <Route path="/admin/domaines" element={<AdminDomainesPage />} />

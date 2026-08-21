@@ -114,6 +114,15 @@ public class UserProfile {
     private boolean notifFinJourneeActif = true;
     private boolean notifCelebrationActif = true;
 
+    // Visibilité du profil (G2-T17, domain.md "Multi-utilisateurs") : opt-in
+    // explicite, désactivé par défaut — un profil n'apparaît dans le classement
+    // public/le fil d'activité que si l'utilisateur a lui-même activé ce
+    // réglage (réflexion vie privée du ticket : rien n'est exposé sans action
+    // volontaire). Lu/écrit par PrivacyPreferencesService, même patron que les
+    // 3 booléens de notification ci-dessus.
+    @Column(name = "profil_public", nullable = false)
+    private boolean profilPublic = false;
+
     // Progression
     private int xpTotal = 0;
     private int niveau = 1;

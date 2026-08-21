@@ -18,8 +18,11 @@ const NAV_ITEMS: NavItem[] = [
   { to: '/agenda', label: 'Agenda' },
   { to: '/habits', label: 'Habitudes' },
   { to: '/badges', label: 'Badges' },
+  { to: '/classement', label: 'Classement' },
+  { to: '/fil-activite', label: "Fil d'activité" },
   { to: '/onboarding', label: 'Profil' },
   { to: '/settings/notifications', label: 'Notifications' },
+  { to: '/settings/confidentialite', label: 'Confidentialité' },
 ];
 
 const ADMIN_NAV_ITEMS: NavItem[] = [
