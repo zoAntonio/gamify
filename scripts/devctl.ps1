@@ -102,7 +102,7 @@ function Test-Build {
     }
 }
 
-Write-Host "Controleur Gamify -- tape 'start', 'stop', 'build' ou 'exit'." -ForegroundColor Magenta
+Write-Host "Controleur Gamify -- tape 'start', 'stop', 'build', 'clear' ou 'exit'." -ForegroundColor Magenta
 
 while ($true) {
     $command = (Read-Host '>').Trim().ToLower()
@@ -110,10 +110,11 @@ while ($true) {
         'start' { Start-Dev }
         'stop' { Stop-Dev }
         'build' { Test-Build }
+        { $_ -in @('clear', 'cls') } { Clear-Host }
         { $_ -in @('exit', 'quit') } {
             Stop-Dev
             return
         }
-        default { Write-Host "Commande inconnue. Utilise 'start', 'stop', 'build' ou 'exit'." -ForegroundColor Yellow }
+        default { Write-Host "Commande inconnue. Utilise 'start', 'stop', 'build', 'clear' ou 'exit'." -ForegroundColor Yellow }
     }
 }
