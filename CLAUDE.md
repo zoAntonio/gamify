@@ -83,7 +83,11 @@ Points non négociables (grille de revue P0, cf. documents) :
   hiérarchie d'exceptions domain, `ApiResponse<T>`, `GlobalExceptionHandler`,
   filtre JWT fonctionnel, Swagger. Features livrées : auth, profil/domaines
   (+ upload de photo d'avatar servie sur `/uploads/**`, public), tâches/kanban
-  (`Activity`, statuts + récompenses), habitudes/streaks (`Habit`/`HabitCompletion`,
+  (`Activity`, statuts + récompenses — validation avec photo preuve optionnelle,
+  redimensionnement serveur via `ImageProcessingService` partagé avec l'avatar,
+  bonus d'attribut +2 au lieu de +1 si une photo est jointe, suppression de la
+  photo possible après coup sans reprendre le bonus, voir roadmap.md G2-T16),
+  habitudes/streaks (`Habit`/`HabitCompletion`,
   édition et suppression **logique** — `habits.actif`, même patron que
   `domaines.actif`, voir roadmap.md G1-T11),
   agenda (`AgendaEvent`, occurrences récurrentes matérialisées — `serie_id`,
@@ -139,7 +143,10 @@ Points non négociables (grille de revue P0, cf. documents) :
   tri persistés en query params** — `useActivityFilters`, premier usage de
   `useSearchParams` dans le repo, patron à réutiliser pour tout futur
   filtre/tri partageable en URL, cf. tableau state management du doc de
-  convention), `agenda` (vues semaine/jour/mois, événements récurrents —
+  convention ; bouton "Valider" ouvre `ActivityValidationModal` proposant
+  "avec photo (+2)"/"sans photo (+1)", miniature + suppression de la photo sur
+  une tâche validée — le drag & drop direct vers "Terminé" reste à +1), `agenda`
+  (vues semaine/jour/mois, événements récurrents —
   option "Répéter" à la création, choix "cette occurrence"/"toute la série"
   à l'édition/suppression d'une occurrence récurrente ; redimensionnement d'un
   événement par poignée sur le bord bas en vues Semaine/Jour — pointer events,
