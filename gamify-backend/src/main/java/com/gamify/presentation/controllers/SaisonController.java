@@ -37,7 +37,7 @@ public class SaisonController {
         return ApiResponse.success(saisonService.list(pageable), "Saisons récupérées");
     }
 
-    @Operation(summary = "Créer une saison", description = "Ouvre une nouvelle saison (~3 mois). Refusé si une saison est déjà active.")
+    @Operation(summary = "Créer une saison", description = "Ouvre une nouvelle saison (~3 mois). Clôture automatiquement la saison active existante, s'il y en a une.")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public ApiResponse<SaisonResponse> create(@Valid @RequestBody CreateSaisonRequest request) {

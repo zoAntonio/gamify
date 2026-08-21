@@ -17,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * Gestion admin des saisons du système d'achievement. Pas de suppression : une
  * saison clôturée reste en base pour l'historique des badges qui y sont rattachés
- * (UserBadge.saison).
+ * (UserBadge.saison). Au plus une saison active à la fois : {@link #create} clôture
+ * automatiquement la saison active existante avant d'ouvrir la nouvelle.
  */
 @Slf4j
 @Service
@@ -36,9 +37,22 @@ public class SaisonService {
         if (!request.dateFin().isAfter(request.dateDebut())) {
             throw new DomainException("La date de fin de la saison doit être après sa date de début");
         }
-        if (saisonRepository.findByClotureeFalse().isPresent()) {
-            throw new ConflictException("Une saison est déjà active, clôturez-la avant d'en ouvrir une nouvelle");
-        }
+
+        // Clôture automatique de la saison active existante, s'il y en a une :
+        // l'admin n'a pas à clôturer explicitement avant de créer la suivante.
+        // saveAndFlush (et non une simple mise à jour laissée au dirty-checking) :
+        // avec un id en stratégie IDENTITY, l'INSERT de la nouvelle saison ci-dessous
+        // part immédiatement (persist() ne peut pas être différé), alors qu'une
+        // UPDATE laissée au flush de fin de transaction partirait après — les deux
+        // lignes se retrouveraient un instant à cloturee=false en base et
+        // violeraient l'index unique partiel (V11, cloturee=false). Flush explicite
+        // pour garantir l'ordre. Ce même index reste le garde-fou en cas de course
+        // entre deux requêtes concurrentes.
+        saisonRepository.findByClotureeFalse().ifPresent(active -> {
+            active.setCloturee(true);
+            saisonRepository.saveAndFlush(active);
+            log.info("Saison '{}' clôturée automatiquement (nouvelle saison créée)", active.getNom());
+        });
 
         Saison saison = new Saison();
         saison.setNom(request.nom());

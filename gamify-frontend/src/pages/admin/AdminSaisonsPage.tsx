@@ -55,14 +55,14 @@ export const AdminSaisonsPage: FC = () => {
             Fenêtres temporelles du système de badges — une seule saison active à la fois.
           </p>
         </div>
-        <Button type="button" onClick={() => setModalOpen(true)} disabled={hasSaisonActive}>
+        <Button type="button" onClick={() => setModalOpen(true)}>
           + Nouvelle saison
         </Button>
       </div>
 
       {hasSaisonActive && (
         <p className="text-[13px] text-text-muted">
-          Une saison est déjà active — clôturez-la avant d'en créer une nouvelle.
+          Une saison est active — en créer une nouvelle clôturera automatiquement celle-ci.
         </p>
       )}
       {actionError && <p className="text-[15px] text-danger">{actionError}</p>}
