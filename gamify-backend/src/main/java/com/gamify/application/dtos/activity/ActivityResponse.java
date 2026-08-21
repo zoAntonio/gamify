@@ -16,6 +16,7 @@ public record ActivityResponse(
         String objectif,
         int xpRecompense,
         StatutKanban statut,
-        LocalDateTime completedAt
+        LocalDateTime completedAt,
+        String photoUrl
 ) {
 }

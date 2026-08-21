@@ -15,6 +15,9 @@ export interface Activity {
   xpRecompense: number;
   statut: StatutKanban;
   completedAt: string | null;
+  // Chemin /uploads/... de la photo preuve (G2-T16) — null si aucune. Sa présence
+  // signifie que le bonus +2 (au lieu de +1) a été appliqué à la validation.
+  photoUrl: string | null;
 }
 
 export interface ActivityRequest {

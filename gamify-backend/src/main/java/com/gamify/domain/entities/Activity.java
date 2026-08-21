@@ -52,4 +52,11 @@ public class Activity extends BaseEntity {
     private boolean confirme = false; // irréversible après confirmation
 
     private LocalDateTime completedAt;
+
+    // Photo preuve jointe à la validation (G2-T16, domain.md) : chemin relatif sous
+    // uploads/ (ex. activity-proofs/uuid.jpg), null si aucune. Sa seule présence
+    // détermine le bonus d'attribut (+2 au lieu de +1) appliqué à la validation —
+    // même patron que UserProfile.avatarImage (chemin nu, pas l'URL complète).
+    @Column(name = "photo_preuve")
+    private String photoPreuve;
 }

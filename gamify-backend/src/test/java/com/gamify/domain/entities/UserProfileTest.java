@@ -1,5 +1,6 @@
 package com.gamify.domain.entities;
 
+import com.gamify.domain.enums.Attribut;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -69,6 +70,25 @@ class UserProfileTest {
 
         assertThat(profile.getXpTotal()).isEqualTo(100);
         assertThat(profile.getNiveau()).isEqualTo(2);
+    }
+
+    @Test
+    void appliquerGainAttribut_sansMontantExplicite_ajouteUnPoint() {
+        UserProfile profile = new UserProfile();
+
+        profile.appliquerGainAttribut(Attribut.INT);
+
+        assertThat(profile.getValeurAttribut(Attribut.INT)).isEqualTo(11);
+    }
+
+    @Test
+    void appliquerGainAttribut_avecMontantExplicite_ajouteExactementCeMontant() {
+        // Ticket G2-T16 : bonus +2 au lieu de +1 quand une photo preuve est jointe.
+        UserProfile profile = new UserProfile();
+
+        profile.appliquerGainAttribut(Attribut.FOR, 2);
+
+        assertThat(profile.getValeurAttribut(Attribut.FOR)).isEqualTo(12);
     }
 
     @Test

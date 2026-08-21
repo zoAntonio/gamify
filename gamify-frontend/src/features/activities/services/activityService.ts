@@ -38,9 +38,17 @@ export const activityService = {
   createActivity: (request: ActivityRequest): Promise<Activity> =>
     apiClient.post<Activity>('/activities', request),
 
-  validerActivity: (id: number): Promise<Activity> =>
-    apiClient.post<Activity>(`/activities/${id}/valider`),
-
   changerStatut: (id: number, statut: StatutKanban): Promise<Activity> =>
     apiClient.patch<Activity>(`/activities/${id}/statut`, { statut }),
+
+  // Photo preuve à la validation (G2-T16) : réutilise l'action /valider déjà exposée
+  // côté backend, avec un fichier — donne +2 au lieu de +1 sur l'attribut ciblé.
+  validerAvecPhoto: (id: number, photo: File): Promise<Activity> => {
+    const form = new FormData();
+    form.append('photo', photo);
+    return apiClient.postForm<Activity>(`/activities/${id}/valider`, form);
+  },
+
+  supprimerPhotoPreuve: (id: number): Promise<Activity> =>
+    apiClient.delete<Activity>(`/activities/${id}/photo`),
 };
