@@ -94,7 +94,12 @@ Points non négociables (grille de revue P0, cf. documents) :
   système, catalogue de badges Bronze/Argent/Or par domaine, saisons —
   fenêtre de comptage des badges, une seule active à la fois —, classement/
   stats utilisateurs en lecture seule ; déblocage auto de badges branché dans
-  `ActivityService`/`HabitService`). Malus d'inactivité (G1-T04, domain.md) :
+  `ActivityService`/`HabitService`). **Galerie de badges joueur** (G2-T15,
+  2026-08-21) : `GET /api/badges/me` élargi à l'historique complet toutes
+  saisons (plus récent d'abord, un badge reste acquis après clôture de sa
+  saison) + nouveau `GET /api/badges/a-debloquer` (catalogue actif pas encore
+  débloqué pour la saison en cours, avec progression courante par domaine,
+  vide si aucune saison active). Malus d'inactivité (G1-T04, domain.md) :
   −2/jour sans gain sur un attribut (−3 pour PRE), plancher 0, +−5 cumulé au
   3ᵉ jour consécutif de manque — n'évalue que les attributs des domaines
   **trackés** par l'utilisateur (décision assumée, voir roadmap.md). Premier
@@ -139,8 +144,11 @@ Points non négociables (grille de revue P0, cf. documents) :
   à l'édition/suppression d'une occurrence récurrente ; redimensionnement d'un
   événement par poignée sur le bord bas en vues Semaine/Jour — pointer events,
   pas de DnD natif, granularité 15 min),
-  `habits` (grille type HabitKit), `dashboard` (carte du personnage FIFA-like,
-  radar/barres d'attributs SVG faits main, XP par période, journal),
+  `habits` (grille type HabitKit), `badges` (galerie `/badges` — acquis
+  groupés par saison, à débloquer grisés avec barre de progression, voir
+  roadmap.md G2-T15), `dashboard` (carte du personnage FIFA-like,
+  radar/barres d'attributs SVG faits main, XP par période, journal, carte
+  "dernier badge" avec lien vers la galerie),
   `backoffice/{domaines,users,saisons,badges}` (pages `/admin/*`, garde de
   route `RequireAdmin`, section "Administration" dans `Sidebar` visible
   seulement si `isAdmin`), `notifications` (réglages sur `/settings/notifications`,

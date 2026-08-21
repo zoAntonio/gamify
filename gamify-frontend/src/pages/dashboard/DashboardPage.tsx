@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FC } from 'react';
 import { PlayerCard } from '@/features/dashboard/components/PlayerCard';
+import { LastBadgeCard } from '@/features/dashboard/components/LastBadgeCard';
 import { AttributeBars } from '@/features/dashboard/components/AttributeBars';
 import { AttributeRadar } from '@/features/dashboard/components/AttributeRadar';
 import { ProgressionChart } from '@/features/dashboard/components/ProgressionChart';
@@ -25,7 +26,14 @@ export const DashboardPage: FC = () => {
 
   return (
     <section className="flex flex-col gap-5">
-      <PlayerCard overview={overview} />
+      <div className="flex flex-col gap-5 lg:flex-row lg:items-stretch">
+        <div className="flex-1">
+          <PlayerCard overview={overview} />
+        </div>
+        <div className="w-full lg:w-72 lg:shrink-0">
+          <LastBadgeCard />
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         <div className="rounded-card bg-surface p-5 shadow-glass">

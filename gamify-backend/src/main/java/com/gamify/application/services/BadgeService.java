@@ -1,5 +1,6 @@
 package com.gamify.application.services;
 
+import com.gamify.application.dtos.badge.BadgeLockedResponse;
 import com.gamify.application.dtos.badge.UserBadgeResponse;
 import com.gamify.domain.entities.BadgeDefinition;
 import com.gamify.domain.entities.Domaine;
@@ -20,7 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Déblocage des badges (Bronze/Argent/Or par domaine, domain.md), saisonnier :
@@ -73,16 +79,65 @@ public class BadgeService {
         }
     }
 
+    /**
+     * Historique complet des badges débloqués par l'utilisateur, toutes saisons
+     * confondues (le plus récent d'abord) — un badge reste acquis même après la
+     * clôture de la saison où il a été gagné. Élargi depuis la version initiale de
+     * G2-T15 (qui ne renvoyait que la saison active) pour servir la galerie
+     * utilisateur "acquis, par saison" ; sans impact sur le moteur de notification
+     * (`useNotificationEngine`) qui ne fait que comparer des ids d'un sondage à
+     * l'autre, quelle que soit la portée renvoyée.
+     */
     @Transactional(readOnly = true)
     public List<UserBadgeResponse> mesBadges(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
+        return userBadgeRepository.findByUserIdOrderByDateObtentionDesc(user.getId()).stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    /**
+     * Badges du catalogue pas encore débloqués par l'utilisateur pour la saison active
+     * (grisés côté galerie, avec la progression actuelle vers le seuil). Liste vide si
+     * aucune saison n'est en cours : rien n'est débloquable tant qu'aucune fenêtre de
+     * comptage n'est ouverte.
+     */
+    @Transactional(readOnly = true)
+    public List<BadgeLockedResponse> badgesADebloquer(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Utilisateur introuvable"));
         Saison saison = saisonRepository.findByClotureeFalse().orElse(null);
         if (saison == null) {
             return List.of();
         }
-        return userBadgeRepository.findByUserIdAndSaisonId(user.getId(), saison.getId()).stream()
-                .map(this::toResponse)
+
+        Set<Long> dejaObtenusCetteSaison = userBadgeRepository.findByUserIdAndSaisonId(user.getId(), saison.getId())
+                .stream()
+                .map(userBadge -> userBadge.getBadgeDefinition().getId())
+                .collect(Collectors.toSet());
+
+        // Un seul comptage par domaine (pas par badge) : les 3 paliers d'un même
+        // domaine partagent la même progression.
+        Map<Long, Long> progressionParDomaine = new HashMap<>();
+
+        return badgeDefinitionRepository.findByActifTrue().stream()
+                .filter(badge -> !dejaObtenusCetteSaison.contains(badge.getId()))
+                .sorted(Comparator.<BadgeDefinition, String>comparing(badge -> badge.getDomaine().getNom())
+                        .thenComparing(badge -> badge.getPalier().ordinal()))
+                .map(badge -> {
+                    long progression = progressionParDomaine.computeIfAbsent(
+                            badge.getDomaine().getId(),
+                            domaineId -> compterValidations(user.getId(), domaineId, saison));
+                    return new BadgeLockedResponse(
+                            badge.getId(),
+                            badge.getNom(),
+                            badge.getDescription(),
+                            badge.getPalier(),
+                            badge.getDomaine().getNom(),
+                            badge.getSeuilValidations(),
+                            progression);
+                })
                 .toList();
     }
 

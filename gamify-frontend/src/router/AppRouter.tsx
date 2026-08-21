@@ -10,6 +10,7 @@ import { DashboardPage } from '@/pages/dashboard/DashboardPage';
 import { ActivityListPage } from '@/pages/activities/ActivityListPage';
 import { AgendaPage } from '@/pages/agenda/AgendaPage';
 import { HabitsPage } from '@/pages/habits/HabitsPage';
+import { BadgesPage } from '@/pages/badges/BadgesPage';
 import { NotificationSettingsPage } from '@/pages/settings/NotificationSettingsPage';
 import { AdminDomainesPage } from '@/pages/admin/AdminDomainesPage';
 import { AdminUsersPage } from '@/pages/admin/AdminUsersPage';
@@ -33,6 +34,7 @@ export const AppRouter: FC = () => {
             <Route path="/activities" element={<ActivityListPage />} />
             <Route path="/agenda" element={<AgendaPage />} />
             <Route path="/habits" element={<HabitsPage />} />
+            <Route path="/badges" element={<BadgesPage />} />
             <Route path="/settings/notifications" element={<NotificationSettingsPage />} />
 
             <Route element={<RequireAdmin />}>
