@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -33,4 +34,16 @@ public interface UserProfileRepository extends JpaRepository<UserProfile, Long> 
      * {@code AdminUserService.ranking} (qui, lui, voit tout le monde).
      */
     Page<UserProfile> findByProfilPublicTrue(Pageable pageable);
+
+    /**
+     * Recherche admin (`/api/backoffice/users?search=`) : username/email vivent
+     * sur {@link com.gamify.domain.entities.User}, d'où le JOIN (pas FETCH — le
+     * username est de toute façon résolu séparément par
+     * {@code AdminUserService.ranking}, même patron anti-N+1 que la méthode sans
+     * recherche). Insensible à la casse, recherche partielle (contient).
+     */
+    @Query("SELECT p FROM UserProfile p JOIN p.user u "
+            + "WHERE LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')) "
+            + "OR LOWER(u.email) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<UserProfile> searchByUsernameOrEmail(@Param("search") String search, Pageable pageable);
 }

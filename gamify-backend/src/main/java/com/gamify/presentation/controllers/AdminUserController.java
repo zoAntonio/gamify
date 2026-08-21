@@ -32,15 +32,16 @@ public class AdminUserController {
 
     private final AdminUserService adminUserService;
 
-    @Operation(summary = "Classement des utilisateurs", description = "Liste paginée triée par XP total ou niveau (décroissant).")
+    @Operation(summary = "Classement des utilisateurs", description = "Liste paginée triée par XP total ou niveau (décroissant), filtrable par username/email.")
     @GetMapping
     public ApiResponse<Page<UserRankResponse>> ranking(
             @Parameter(description = "Critère de tri : xpTotal ou niveau") @RequestParam(defaultValue = "xpTotal") String sortBy,
+            @Parameter(description = "Recherche partielle sur username ou email, insensible à la casse") @RequestParam(required = false) String search,
             @PageableDefault(size = 20) Pageable pageable
     ) {
         String critere = CRITERES_TRI_AUTORISES.contains(sortBy) ? sortBy : "xpTotal";
         var pageableTrie = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, critere));
-        return ApiResponse.success(adminUserService.ranking(pageableTrie), "Classement récupéré");
+        return ApiResponse.success(adminUserService.ranking(pageableTrie, search), "Classement récupéré");
     }
 
     @Operation(summary = "Statistiques globales", description = "Nombre total d'utilisateurs.")
